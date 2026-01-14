@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract } from '../types';
+import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -12,63 +12,80 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     tasks: [],
     transactions: [],
     customers: [],
-    contracts: []
+    contracts: [],
+    inventory: [],
+    sales: [],
+    appMode: (localStorage.getItem('appMode') as AppMode) || 'user'
   });
   const [loading, setLoading] = useState(true);
 
   // Fetch initial data
-  useEffect(() => {
+  const fetchData = async () => {
     if (!user) {
-      setState({ ideas: [], tasks: [], transactions: [], customers: [], contracts: [] });
+      setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [] }));
       setLoading(false);
       return;
     }
 
-    const fetchData = async () => {
-      setLoading(true);
+    setLoading(true);
 
-      const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes] = await Promise.all([
-        supabase.from('video_ideas').select('*').order('criado_em', { ascending: false }),
-        supabase.from('tasks').select('*').order('criada_em', { ascending: false }),
-        supabase.from('transactions').select('*').order('data', { ascending: false }),
-        supabase.from('customers').select('*').order('criado_em', { ascending: false }),
-        supabase.from('contracts').select('*').order('created_at', { ascending: false })
-      ]);
+    const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes] = await Promise.all([
+      supabase.from('video_ideas').select('*').order('criado_em', { ascending: false }),
+      supabase.from('tasks').select('*').order('criada_em', { ascending: false }),
+      supabase.from('transactions').select('*').order('data', { ascending: false }),
+      supabase.from('customers').select('*').order('criado_em', { ascending: false }),
+      supabase.from('contracts').select('*').order('created_at', { ascending: false }),
+      supabase.from('inventory').select('*').order('criado_em', { ascending: false }),
+      supabase.from('sales').select('*, sale_items(*)').order('criado_em', { ascending: false })
+    ]);
 
-      setState({
-        ideas: (ideasRes.data || []).map(i => ({
-          ...i,
-          criadoEm: new Date(i.criado_em).getTime(),
-          atualizadoEm: new Date(i.atualizado_em).getTime()
-        })),
-        tasks: (tasksRes.data || []).map(t => ({
-          ...t,
-          criadaEm: new Date(t.criada_em).getTime(),
-          concluidaEm: t.concluida_em ? new Date(t.concluida_em).getTime() : null
-        })),
-        transactions: (transactionsRes.data || []).map(tx => ({
-          ...tx,
-          dataVencimento: tx.data_vencimento,
-          statusPagamento: tx.status_pagamento,
-          criadaEm: new Date(tx.criada_em).getTime()
-        })).sort((a, b) => {
-          const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
-          const dateB = b.data.includes('T') ? b.data : `${b.data}T12:00:00`;
-          return new Date(dateB).getTime() - new Date(dateA).getTime();
-        }),
-        customers: (customersRes.data || []).map(c => ({
-          ...c,
-          criadoEm: new Date(c.criado_em).getTime()
-        })),
-        contracts: (contractsRes.data || []).map(c => ({
-          ...c,
-          created_at: new Date(c.created_at).getTime()
-        }))
-      });
-      setLoading(false);
-    };
+    setState(prev => ({
+      ...prev,
+      ideas: (ideasRes.data || []).map(i => ({
+        ...i,
+        criadoEm: new Date(i.criado_em).getTime(),
+        atualizadoEm: new Date(i.atualizado_em).getTime()
+      })),
+      tasks: (tasksRes.data || []).map(t => ({
+        ...t,
+        criadaEm: new Date(t.criada_em).getTime(),
+        concluidaEm: t.concluida_em ? new Date(t.concluida_em).getTime() : null
+      })),
+      transactions: (transactionsRes.data || []).map(tx => ({
+        ...tx,
+        dataVencimento: tx.data_vencimento,
+        statusPagamento: tx.status_pagamento,
+        criadaEm: new Date(tx.criada_em).getTime()
+      })).sort((a, b) => {
+        const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
+        const dateB = b.data.includes('T') ? b.data : `${b.data}T12:00:00`;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      }),
+      customers: (customersRes.data || []).map(c => ({
+        ...c,
+        criadoEm: new Date(c.criado_em).getTime()
+      })),
+      contracts: (contractsRes.data || []).map(c => ({
+        ...c,
+        created_at: new Date(c.created_at).getTime()
+      })),
+      inventory: (inventoryRes.data || []).map(i => ({
+        ...i,
+        criadoEm: new Date(i.criado_em).getTime()
+      })),
+      sales: (salesRes.data || []).map(s => ({
+        ...s,
+        criadoEm: new Date(s.criado_em).getTime(),
+        items: s.sale_items
+      }))
+    }));
+    setLoading(false);
+  };
 
+  useEffect(() => {
     fetchData();
+
+    if (!user) return;
 
     // Set up real-time subscriptions
     const channels = [
@@ -76,7 +93,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       supabase.channel('tasks_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('transactions_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('customers_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'customers', filter: `user_id=eq.${user.id}` }, fetchData),
-      supabase.channel('contracts_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'contracts', filter: `user_id=eq.${user.id}` }, fetchData)
+      supabase.channel('contracts_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'contracts', filter: `user_id=eq.${user.id}` }, fetchData),
+      supabase.channel('inventory_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory', filter: `user_id=eq.${user.id}` }, fetchData),
+      supabase.channel('sales_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'sales', filter: `user_id=eq.${user.id}` }, fetchData)
     ];
 
     channels.forEach(channel => channel.subscribe());
@@ -375,9 +394,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const deleteTransaction = async (id: string) => {
     if (!user) return;
+
+    // 1. Check if it's a sale transaction
+    const tx = state.transactions.find(t => t.id === id);
+    if (tx && tx.descricao.includes('VENDA_ID:')) {
+      const saleId = tx.descricao.split('VENDA_ID:')[1];
+      // Delete the sale (which will also trigger the sale deletion logic if we're not careful, 
+      // but here we just want the database to stay in sync)
+      await supabase.from('sales').delete().eq('id', saleId);
+    }
+
     const { error } = await supabase.from('transactions').delete().eq('id', id);
     if (!error) {
-      setState(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
+      setState(prev => ({
+        ...prev,
+        transactions: prev.transactions.filter(t => t.id !== id),
+        sales: tx && tx.descricao.includes('VENDA_ID:')
+          ? prev.sales.filter(s => s.id !== tx.descricao.split('VENDA_ID:')[1])
+          : prev.sales
+      }));
     }
   };
 
@@ -454,6 +489,139 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  // --- Inventory ---
+  const addInventoryItem = async (item: Omit<InventoryItem, 'id' | 'user_id' | 'criadoEm'>) => {
+    if (!user) return;
+    const { data, error } = await supabase.from('inventory').insert([{
+      user_id: user.id,
+      nome: item.nome,
+      descricao: item.descricao,
+      quantidade: item.quantidade,
+      preco: item.preco,
+      categoria: item.categoria
+    }]).select();
+
+    if (data && !error) {
+      const newItem = {
+        ...data[0],
+        criadoEm: new Date(data[0].criado_em).getTime()
+      };
+      setState(prev => ({ ...prev, inventory: [newItem, ...prev.inventory] }));
+    }
+  };
+
+  const updateInventoryItem = async (id: string, updates: Partial<InventoryItem>) => {
+    if (!user) return;
+    const { data, error } = await supabase.from('inventory').update({
+      nome: updates.nome,
+      descricao: updates.descricao,
+      quantidade: updates.quantidade,
+      preco: updates.preco,
+      categoria: updates.categoria
+    }).eq('id', id).select();
+
+    if (data && !error) {
+      setState(prev => ({
+        ...prev,
+        inventory: prev.inventory.map(i => i.id === id ? { ...i, ...updates } : i)
+      }));
+    }
+  };
+
+  const deleteInventoryItem = async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from('inventory').delete().eq('id', id);
+    if (!error) {
+      setState(prev => ({ ...prev, inventory: prev.inventory.filter(i => i.id !== id) }));
+    }
+  };
+
+  // --- Sales ---
+  const addSale = async (sale: Omit<Sale, 'id' | 'user_id' | 'criadoEm'>, items: Omit<SaleItem, 'id' | 'sale_id'>[]) => {
+    if (!user) return;
+
+    // 1. Create the sale
+    const { data: saleData, error: saleError } = await supabase.from('sales').insert([{
+      user_id: user.id,
+      customer_id: sale.customer_id,
+      total: sale.total,
+      status: sale.status,
+      metodo_pagamento: sale.metodo_pagamento
+    }]).select();
+
+    if (saleError || !saleData) return;
+
+    const saleId = saleData[0].id;
+
+    // 2. Create sale items
+    const { error: itemsError } = await supabase.from('sale_items').insert(
+      items.map(item => ({
+        sale_id: saleId,
+        product_id: item.product_id,
+        quantidade: item.quantidade,
+        preco_unitario: item.preco_unitario,
+        nome_produto: item.nome_produto
+      }))
+    );
+
+    if (!itemsError) {
+      // 3. Create a financial transaction for the sale
+      await addTransaction({
+        tipo: 'receita',
+        valor: sale.total,
+        categoria: 'Vendas',
+        descricao: `VENDA_ID:${saleId}`, // Using a searchable pattern
+        data: new Date().toISOString().split('T')[0],
+        customer_id: sale.customer_id,
+        statusPagamento: sale.status === 'concluido' ? 'pago' : 'pendente'
+      });
+
+      fetchData(); // Refresh everything
+    }
+  };
+
+  const updateSaleStatus = async (id: string, status: Sale['status']) => {
+    if (!user) return;
+    const { error } = await supabase.from('sales').update({ status }).eq('id', id);
+    if (!error) {
+      // Also update the related transaction status
+      const relatedTx = state.transactions.find(t => t.descricao.includes(`VENDA_ID:${id}`));
+      if (relatedTx) {
+        await updateTransaction(relatedTx.id, { statusPagamento: status === 'concluido' ? 'pago' : 'pendente' });
+      }
+
+      setState(prev => ({
+        ...prev,
+        sales: prev.sales.map(s => s.id === id ? { ...s, status } : s)
+      }));
+    }
+  };
+
+  const deleteSale = async (id: string) => {
+    if (!user) return;
+
+    // 1. Delete the sale (this will trigger cascade on sale_items in DB)
+    const { error } = await supabase.from('sales').delete().eq('id', id);
+    if (!error) {
+      // 2. Find and delete the related transaction
+      const relatedTx = state.transactions.find(t => t.descricao.includes(`VENDA_ID:${id}`));
+      if (relatedTx) {
+        await supabase.from('transactions').delete().eq('id', relatedTx.id);
+      }
+
+      setState(prev => ({
+        ...prev,
+        sales: prev.sales.filter(s => s.id !== id),
+        transactions: prev.transactions.filter(t => !t.descricao.includes(`VENDA_ID:${id}`))
+      }));
+    }
+  };
+
+  const setAppMode = (mode: AppMode) => {
+    localStorage.setItem('appMode', mode);
+    setState(prev => ({ ...prev, appMode: mode }));
+  };
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -463,7 +631,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       convertIdeaToTask,
       toggleIdeaShare,
       addCustomer, updateCustomer, deleteCustomer,
-      addContract, deleteContract
+      addContract, deleteContract,
+      addInventoryItem, updateInventoryItem, deleteInventoryItem,
+      addSale, updateSaleStatus, deleteSale,
+      setAppMode
     }}>
       {!loading && children}
     </AppContext.Provider>

@@ -149,7 +149,11 @@ const Finance: React.FC = () => {
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-2">
                         {t.statusPagamento && getStatusBadge(t.statusPagamento)}
-                        <span className="font-bold text-slate-200 text-sm uppercase tracking-tight">{t.descricao}</span>
+                        <span className="font-bold text-slate-200 text-sm uppercase tracking-tight">
+                          {t.descricao.startsWith('VENDA_ID:')
+                            ? `Venda #${t.descricao.split(':')[1].substring(0, 8)}`
+                            : t.descricao}
+                        </span>
                       </div>
                       {t.customer_id && (
                         <span className="text-[10px] text-cyan-400 font-mono bg-cyan-950/30 self-start px-1.5 rounded border border-cyan-800/30">
@@ -210,7 +214,11 @@ const Finance: React.FC = () => {
             <div key={t.id} className="p-4 flex flex-col gap-3 hover:bg-slate-800/30 transition-colors">
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1">
-                  <span className="font-bold text-slate-200 text-sm uppercase tracking-tight line-clamp-2">{t.descricao}</span>
+                  <span className="font-bold text-slate-200 text-sm uppercase tracking-tight line-clamp-2">
+                    {t.descricao.startsWith('VENDA_ID:')
+                      ? `Venda #${t.descricao.split(':')[1].substring(0, 8)}`
+                      : t.descricao}
+                  </span>
                   {t.customer_id && (
                     <span className="text-[10px] text-cyan-400 font-mono bg-cyan-950/30 self-start px-1.5 rounded border border-cyan-800/30">
                       {customers.find(c => c.id === t.customer_id)?.nome || 'Cliente'}

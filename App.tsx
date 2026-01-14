@@ -10,6 +10,8 @@ import Finance from './pages/Finance';
 import Login from './pages/Login';
 import Customers from './pages/Customers';
 import Contracts from './pages/Contracts';
+import Inventory from './pages/Inventory';
+import Sales from './pages/Sales';
 import SharedIdea from './pages/SharedIdea';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -111,6 +113,30 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <Layout>
                   <Contracts />
+                </Layout>
+              </ProtectedRoute>
+            </AppProvider>
+          </AuthProvider>
+        } />
+
+        <Route path="/estoque" element={
+          <AuthProvider>
+            <AppProvider>
+              <ProtectedRoute>
+                <Layout>
+                  <Inventory />
+                </Layout>
+              </ProtectedRoute>
+            </AppProvider>
+          </AuthProvider>
+        } />
+
+        <Route path="/vendas" element={
+          <AuthProvider>
+            <AppProvider>
+              <ProtectedRoute>
+                <Layout>
+                  <Sales />
                 </Layout>
               </ProtectedRoute>
             </AppProvider>

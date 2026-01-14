@@ -1,11 +1,11 @@
 import React from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity } from 'lucide-react';
+import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity, Package } from 'lucide-react';
 import { formatDisplayDate } from '../lib/dateUtils';
 
 const Dashboard: React.FC = () => {
-  const { ideas, tasks, transactions } = useApp();
+  const { ideas, tasks, transactions, inventory, appMode } = useApp();
 
   // Stats Calculation
   const totalIdeas = ideas.length;
@@ -112,6 +112,25 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {appMode === 'store' && (
+          <div className="glass-panel p-6 rounded-xl hover:border-orange-500/30 transition-all group lg:col-span-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-400 mb-1">Itens em Estoque</p>
+                <h3 className="text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">
+                  {inventory.length} <span className="text-xs text-slate-500 font-normal">tipos</span>
+                </h3>
+                <span className="text-xs text-orange-300 bg-orange-950/50 border border-orange-900 px-2 py-1 rounded-full mt-2 inline-block">
+                  {inventory.reduce((acc, curr) => acc + curr.quantidade, 0)} unidades totais
+                </span>
+              </div>
+              <div className="p-3 bg-orange-950/30 border border-orange-500/20 rounded-lg text-orange-400 group-hover:shadow-[0_0_10px_rgba(234,88,12,0.3)] transition-all">
+                <Package size={24} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Charts Section */}

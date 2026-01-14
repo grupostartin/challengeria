@@ -10,9 +10,14 @@ import {
   Cpu,
   LogOut,
   Users,
-  FileText
+  FileText,
+  Store,
+  Package,
+  User,
+  ShoppingCart
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useApp } from '../contexts/AppContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,11 +27,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const { signOut } = useAuth();
+  const { appMode, setAppMode } = useApp();
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/ideias', label: 'Ideias de Vídeo', icon: Lightbulb },
-    { path: '/tarefas', label: 'Kanban Tarefas', icon: CheckSquare },
+    { path: '/tarefas', label: appMode === 'store' ? 'Tarefas' : 'Kanban Tarefas', icon: CheckSquare },
+    ...(appMode === 'store' ? [
+      { path: '/estoque', label: 'Estoque', icon: Package },
+      { path: '/vendas', label: 'Vendas (PDV)', icon: ShoppingCart }
+    ] : []),
     { path: '/financeiro', label: 'Financeiro', icon: DollarSign },
     { path: '/clientes', label: 'Clientes', icon: Users },
     { path: '/contratos', label: 'Contratos', icon: FileText },
@@ -45,6 +55,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <span className="text-xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">
             ChallengerIA
           </span>
+        </div>
+
+        <div className="px-4 mb-4">
+          <button
+            onClick={() => setAppMode(appMode === 'user' ? 'store' : 'user')}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-500 border shadow-lg ${appMode === 'store'
+              ? 'bg-orange-500/10 text-orange-400 border-orange-500/30 shadow-orange-500/10'
+              : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 shadow-cyan-500/10 hover:bg-cyan-500/20'
+              }`}
+          >
+            {appMode === 'store' ? (
+              <>
+                <Store size={14} className="animate-pulse" />
+                SOU UMA LOJA
+              </>
+            ) : (
+              <>
+                <User size={14} />
+                MODO USUÁRIO
+              </>
+            )}
+          </button>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-2">
@@ -94,6 +126,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {mobileMenuOpen ? <X /> : <Menu />}
           </button>
         </header>
+
+        {/* Mobile App Mode Indicator */}
+        <div className="md:hidden px-4 py-2 glass-panel border-b border-slate-800/50 flex justify-center">
+          <button
+            onClick={() => setAppMode(appMode === 'user' ? 'store' : 'user')}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border ${appMode === 'store'
+              ? 'bg-orange-500/20 text-orange-400 border-orange-500/40'
+              : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+              }`}
+          >
+            {appMode === 'store' ? (
+              <><Store size={12} /> SOU UMA LOJA</>
+            ) : (
+              <><User size={12} /> MODO USUÁRIO</>
+            )}
+          </button>
+        </div>
 
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
