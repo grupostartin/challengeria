@@ -67,13 +67,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             {appMode === 'store' ? (
               <>
-                <Store size={14} className="animate-pulse" />
-                SOU UMA LOJA
+                <User size={14} />
+                MUDAR PARA MODO USUÁRIO
               </>
             ) : (
               <>
-                <User size={14} />
-                MODO USUÁRIO
+                <Store size={14} className="animate-pulse" />
+                MUDAR PARA MODO LOJA
               </>
             )}
           </button>
@@ -137,9 +137,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               }`}
           >
             {appMode === 'store' ? (
-              <><Store size={12} /> SOU UMA LOJA</>
+              <><User size={12} /> MUDAR PARA USUÁRIO</>
             ) : (
-              <><User size={12} /> MODO USUÁRIO</>
+              <><Store size={12} /> MUDAR PARA LOJA</>
             )}
           </button>
         </div>

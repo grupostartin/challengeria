@@ -8,6 +8,7 @@ import VideoIdeas from './pages/VideoIdeas';
 import Kanban from './pages/Kanban';
 import Finance from './pages/Finance';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Customers from './pages/Customers';
 import Contracts from './pages/Contracts';
 import Inventory from './pages/Inventory';
@@ -44,6 +45,12 @@ const App: React.FC = () => {
         <Route path="/login" element={
           <AuthProvider>
             <Login />
+          </AuthProvider>
+        } />
+
+        <Route path="/signup" element={
+          <AuthProvider>
+            <Signup />
           </AuthProvider>
         } />
 

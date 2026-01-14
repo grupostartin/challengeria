@@ -4,117 +4,100 @@ import { supabase } from '../lib/supabase';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-        if (error) {
-            setError(error.message);
-            setLoading(false);
-        } else {
-            navigate('/');
-        }
-    };
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      navigate('/');
+    }
+  };
 
-    const handleSignUp = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
 
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-        });
+  return (
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <h1>ChallengerIA</h1>
+          <p>Entre na sua conta</p>
+        </div>
 
-        if (error) {
-            setError(error.message);
-        } else {
-            setError('Check your email for the confirmation link!');
-        }
-        setLoading(false);
-    };
-
-    return (
-        <div className="login-container">
-            <div className="login-card">
-                <div className="login-header">
-                    <h1>ChallengerIA</h1>
-                    <p>Login to your account</p>
-                </div>
-
-                <form onSubmit={handleLogin} className="login-form">
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <div className="input-with-icon">
-                            <Mail size={18} />
-                            <input
-                                id="email"
-                                type="email"
-                                placeholder="you@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <div className="input-with-icon">
-                            <Lock size={18} />
-                            <input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="error-message">
-                            <AlertCircle size={16} />
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    <div className="login-actions">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="btn btn-primary"
-                        >
-                            {loading ? 'Processing...' : 'Sign In'}
-                            <LogIn size={18} />
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={handleSignUp}
-                            disabled={loading}
-                            className="btn btn-secondary"
-                        >
-                            Create Account
-                        </button>
-                    </div>
-                </form>
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="form-group">
+            <label htmlFor="email">E-mail</label>
+            <div className="input-with-icon">
+              <Mail size={18} />
+              <input
+                id="email"
+                type="email"
+                placeholder="exemplo@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
+          </div>
 
-            <style>{`
+          <div className="form-group">
+            <label htmlFor="password">Senha</label>
+            <div className="input-with-icon">
+              <Lock size={18} />
+              <input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="error-message">
+              <AlertCircle size={16} />
+              <span>{error === 'Invalid login credentials' ? 'Credenciais de login inválidas' : error}</span>
+            </div>
+          )}
+
+          <div className="login-actions">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+            >
+              {loading ? 'Processando...' : 'Entrar'}
+              <LogIn size={18} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/signup')}
+              disabled={loading}
+              className="btn btn-secondary"
+            >
+              Criar Conta
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <style>{`
         .login-container {
           display: flex;
           align-items: center;
@@ -258,8 +241,8 @@ const Login: React.FC = () => {
           color: white;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default Login;
