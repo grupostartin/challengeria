@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Lightbulb,
@@ -15,10 +15,12 @@ import {
   Package,
   User,
   ShoppingCart,
-  Calendar
+  Calendar,
+  MoreVertical
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
+import { MenuBar } from './ui/bottom-menu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,7 +28,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
   const { signOut } = useAuth();
   const { appMode, setAppMode } = useApp();
 
@@ -124,9 +126,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Cpu className="text-cyan-400" size={20} />
             <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">ChallengerIA</span>
           </div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-300 hover:text-white">
-            {mobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          <div className="w-6 h-6"></div> {/* Spacer to keep title centered if needed, or just remove if we want left-aligned */}
         </header>
 
         {/* Mobile App Mode Indicator */}
@@ -146,44 +146,33 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </button>
         </div>
 
-        {/* Mobile Menu Overlay */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-0 w-full glass-panel z-30 border-b border-slate-800">
-            <nav className="p-4 space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium ${isActive(item.path)
-                    ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-800'
-                    : 'text-slate-300 hover:bg-slate-800/50'
-                    }`}
-                >
-                  <item.icon size={20} />
-                  {item.label}
-                </Link>
-              ))}
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  signOut();
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-slate-300 hover:text-red-400 hover:bg-red-500/10"
-              >
-                <LogOut size={20} />
-                Sair
-              </button>
-            </nav>
-          </div>
-        )}
+        {/* Mobile Menu Overlay removed since we now use the floating bar */}
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto p-4 md:p-8 z-10 relative">
+        <main className="flex-1 overflow-auto p-4 md:p-8 z-10 relative pb-20 md:pb-8">
           <div className="max-w-7xl mx-auto h-full">
             {children}
           </div>
         </main>
+
+        {/* Floating Bottom Menu for Mobile */}
+        <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[95%] flex justify-center">
+          <MenuBar
+            items={[
+              ...navItems.map(item => ({
+                icon: (props: any) => <item.icon {...props} />,
+                label: item.label,
+                active: location.pathname === item.path,
+                onClick: () => navigate(item.path)
+              })),
+              {
+                icon: (props: any) => <LogOut {...props} className="text-red-400" />,
+                label: "Sair",
+                onClick: () => signOut()
+              }
+            ]}
+          />
+        </div>
       </div>
     </div>
   );
