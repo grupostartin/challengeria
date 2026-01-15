@@ -1,11 +1,16 @@
 import React from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity, Package } from 'lucide-react';
-import { formatDisplayDate } from '../lib/dateUtils';
+import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity, Package, Clock, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
+import { formatDisplayDate, getBrasiliaDate } from '../lib/dateUtils';
+import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
-  const { ideas, tasks, transactions, inventory, appMode } = useApp();
+  const { ideas, tasks, transactions, inventory, appointments, appMode } = useApp();
+
+  const today = getBrasiliaDate();
+  const todayAppointments = appointments.filter(a => a.data === today);
+  const pendingToday = todayAppointments.filter(a => a.status === 'pendente');
 
   // Stats Calculation
   const totalIdeas = ideas.length;
@@ -48,6 +53,41 @@ const Dashboard: React.FC = () => {
           <p className="text-sm text-slate-400">Status do sistema e métricas principais</p>
         </div>
       </div>
+
+      {todayAppointments.length > 0 && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="relative overflow-hidden group glass-panel bg-gradient-to-r from-cyan-950/40 via-slate-900/40 to-slate-900/40 border-cyan-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+            <div className={`absolute top-0 left-0 w-1 h-full ${pendingToday.length > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
+
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-xl ${pendingToday.length > 0 ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'} border shadow-inner`}>
+                <CalendarIcon size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-white flex items-center gap-2">
+                  Você tem {todayAppointments.length} {todayAppointments.length === 1 ? 'compromisso' : 'compromissos'} hoje
+                  {pendingToday.length > 0 && (
+                    <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>
+                  )}
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {pendingToday.length > 0
+                    ? `Próximo evento pendente: ${pendingToday[0].horario} - ${pendingToday[0].titulo}`
+                    : 'Todos os compromissos de hoje foram concluídos!'}
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/agenda"
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg border border-white/10 transition-all font-medium text-sm group-hover:border-cyan-500/50"
+            >
+              Ver Agenda
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -14,7 +14,8 @@ import {
   Store,
   Package,
   User,
-  ShoppingCart
+  ShoppingCart,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -31,6 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/agenda', label: 'Agenda', icon: Calendar },
     { path: '/ideias', label: 'Ideias de Vídeo', icon: Lightbulb },
     { path: '/tarefas', label: appMode === 'store' ? 'Tarefas' : 'Kanban Tarefas', icon: CheckSquare },
     ...(appMode === 'store' ? [
@@ -104,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             Sair
           </button>
           <div className="text-xs text-slate-600 text-center font-mono pt-2">
-            SYS.VER.2.0.77
+            SYS.VER.1.0.77 BETA
           </div>
         </div>
       </aside>

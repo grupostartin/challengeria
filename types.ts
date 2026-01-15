@@ -94,6 +94,19 @@ export interface Sale {
   items?: SaleItem[];
 }
 
+export interface Appointment {
+  id: string;
+  user_id: string;
+  customer_id?: string;
+  titulo: string;
+  descricao: string;
+  data: string; // ISO Date (YYYY-MM-DD)
+  horario: string; // HH:mm
+  tipo: 'servico' | 'compromisso' | 'outro';
+  status: 'pendente' | 'concluido' | 'cancelado';
+  criadoEm: number;
+}
+
 export interface AppState {
   ideas: VideoIdea[];
   tasks: Task[];
@@ -102,6 +115,7 @@ export interface AppState {
   contracts: Contract[];
   inventory: InventoryItem[];
   sales: Sale[];
+  appointments: Appointment[];
   appMode: AppMode;
 }
 
@@ -137,6 +151,11 @@ export interface AppContextType extends AppState {
   addSale: (sale: Omit<Sale, 'id' | 'user_id' | 'criadoEm'>, items: Omit<SaleItem, 'id' | 'sale_id'>[]) => Promise<void>;
   updateSaleStatus: (id: string, status: Sale['status']) => Promise<void>;
   deleteSale: (id: string) => Promise<void>;
+
+  // --- Agenda ---
+  addAppointment: (appointment: Omit<Appointment, 'id' | 'user_id' | 'criadoEm'>) => Promise<void>;
+  updateAppointment: (id: string, updates: Partial<Appointment>) => Promise<void>;
+  deleteAppointment: (id: string) => Promise<void>;
 
   setAppMode: (mode: AppMode) => void;
 }

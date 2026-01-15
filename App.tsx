@@ -13,6 +13,7 @@ import Customers from './pages/Customers';
 import Contracts from './pages/Contracts';
 import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
+import Agenda from './pages/Agenda';
 import SharedIdea from './pages/SharedIdea';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -144,6 +145,18 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <Layout>
                   <Sales />
+                </Layout>
+              </ProtectedRoute>
+            </AppProvider>
+          </AuthProvider>
+        } />
+
+        <Route path="/agenda" element={
+          <AuthProvider>
+            <AppProvider>
+              <ProtectedRoute>
+                <Layout>
+                  <Agenda />
                 </Layout>
               </ProtectedRoute>
             </AppProvider>

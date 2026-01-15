@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem } from '../types';
+import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem, Appointment } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -15,6 +15,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     contracts: [],
     inventory: [],
     sales: [],
+    appointments: [],
     appMode: (localStorage.getItem('appMode') as AppMode) || 'user'
   });
   const [loading, setLoading] = useState(true);
@@ -23,63 +24,76 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const fetchData = async () => {
     if (!user) {
       setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [] }));
+      setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [], appointments: [] }));
       setLoading(false);
       return;
     }
 
     setLoading(true);
 
-    const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes] = await Promise.all([
-      supabase.from('video_ideas').select('*').order('criado_em', { ascending: false }),
-      supabase.from('tasks').select('*').order('criada_em', { ascending: false }),
-      supabase.from('transactions').select('*').order('data', { ascending: false }),
-      supabase.from('customers').select('*').order('criado_em', { ascending: false }),
-      supabase.from('contracts').select('*').order('created_at', { ascending: false }),
-      supabase.from('inventory').select('*').order('criado_em', { ascending: false }),
-      supabase.from('sales').select('*, sale_items(*)').order('criado_em', { ascending: false })
-    ]);
+    try {
+      const results = await Promise.all([
+        supabase.from('video_ideas').select('*').order('criado_em', { ascending: false }),
+        supabase.from('tasks').select('*').order('criada_em', { ascending: false }),
+        supabase.from('transactions').select('*').order('data', { ascending: false }),
+        supabase.from('customers').select('*').order('criado_em', { ascending: false }),
+        supabase.from('contracts').select('*').order('created_at', { ascending: false }),
+        supabase.from('inventory').select('*').order('criado_em', { ascending: false }),
+        supabase.from('sales').select('*, sale_items(*)').order('criado_em', { ascending: false }),
+        supabase.from('appointments').select('*').order('data', { ascending: true }).order('horario', { ascending: true })
+      ]);
 
-    setState(prev => ({
-      ...prev,
-      ideas: (ideasRes.data || []).map(i => ({
-        ...i,
-        criadoEm: new Date(i.criado_em).getTime(),
-        atualizadoEm: new Date(i.atualizado_em).getTime()
-      })),
-      tasks: (tasksRes.data || []).map(t => ({
-        ...t,
-        criadaEm: new Date(t.criada_em).getTime(),
-        concluidaEm: t.concluida_em ? new Date(t.concluida_em).getTime() : null
-      })),
-      transactions: (transactionsRes.data || []).map(tx => ({
-        ...tx,
-        dataVencimento: tx.data_vencimento,
-        statusPagamento: tx.status_pagamento,
-        criadaEm: new Date(tx.criada_em).getTime()
-      })).sort((a, b) => {
-        const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
-        const dateB = b.data.includes('T') ? b.data : `${b.data}T12:00:00`;
-        return new Date(dateB).getTime() - new Date(dateA).getTime();
-      }),
-      customers: (customersRes.data || []).map(c => ({
-        ...c,
-        criadoEm: new Date(c.criado_em).getTime()
-      })),
-      contracts: (contractsRes.data || []).map(c => ({
-        ...c,
-        created_at: new Date(c.created_at).getTime()
-      })),
-      inventory: (inventoryRes.data || []).map(i => ({
-        ...i,
-        criadoEm: new Date(i.criado_em).getTime()
-      })),
-      sales: (salesRes.data || []).map(s => ({
-        ...s,
-        criadoEm: new Date(s.criado_em).getTime(),
-        items: s.sale_items
-      }))
-    }));
-    setLoading(false);
+      const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes, appointmentsRes] = results;
+
+      setState(prev => ({
+        ...prev,
+        ideas: (ideasRes.data || []).map(i => ({
+          ...i,
+          criadoEm: new Date(i.criado_em).getTime(),
+          atualizadoEm: new Date(i.atualizado_em).getTime()
+        })),
+        tasks: (tasksRes.data || []).map(t => ({
+          ...t,
+          criadaEm: new Date(t.criada_em).getTime(),
+          concluidaEm: t.concluida_em ? new Date(t.concluida_em).getTime() : null
+        })),
+        transactions: (transactionsRes.data || []).map(tx => ({
+          ...tx,
+          dataVencimento: tx.data_vencimento,
+          statusPagamento: tx.status_pagamento,
+          criadaEm: new Date(tx.criada_em).getTime()
+        })).sort((a, b) => {
+          const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
+          const dateB = b.data.includes('T') ? b.data : `${b.data}T12:00:00`;
+          return new Date(dateB).getTime() - new Date(dateA).getTime();
+        }),
+        customers: (customersRes.data || []).map(c => ({
+          ...c,
+          criadoEm: new Date(c.criado_em).getTime()
+        })),
+        contracts: (contractsRes.data || []).map(c => ({
+          ...c,
+          created_at: new Date(c.created_at).getTime()
+        })),
+        inventory: (inventoryRes.data || []).map(i => ({
+          ...i,
+          criadoEm: new Date(i.criado_em).getTime()
+        })),
+        sales: (salesRes.data || []).map(s => ({
+          ...s,
+          criadoEm: new Date(s.criado_em).getTime(),
+          items: s.sale_items
+        })),
+        appointments: (appointmentsRes.data || []).map(a => ({
+          ...a,
+          criadoEm: new Date(a.criado_em).getTime()
+        }))
+      }));
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -95,7 +109,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       supabase.channel('customers_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'customers', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('contracts_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'contracts', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('inventory_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory', filter: `user_id=eq.${user.id}` }, fetchData),
-      supabase.channel('sales_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'sales', filter: `user_id=eq.${user.id}` }, fetchData)
+      supabase.channel('sales_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'sales', filter: `user_id=eq.${user.id}` }, fetchData),
+      supabase.channel('appointments_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `user_id=eq.${user.id}` }, fetchData)
     ];
 
     channels.forEach(channel => channel.subscribe());
@@ -622,6 +637,68 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState(prev => ({ ...prev, appMode: mode }));
   };
 
+  // --- Appointments ---
+  const addAppointment = async (appointment: Omit<Appointment, 'id' | 'user_id' | 'criadoEm'>) => {
+    if (!user) return;
+    const { data, error } = await supabase.from('appointments').insert([{
+      user_id: user.id,
+      customer_id: appointment.customer_id || null,
+      titulo: appointment.titulo,
+      descricao: appointment.descricao,
+      data: appointment.data,
+      horario: appointment.horario,
+      tipo: appointment.tipo,
+      status: appointment.status
+    }]).select();
+
+    if (data && !error) {
+      const newAppointment = {
+        ...data[0],
+        criadoEm: new Date(data[0].criado_em).getTime()
+      };
+      setState(prev => ({
+        ...prev,
+        appointments: [...prev.appointments, newAppointment].sort((a, b) => {
+          if (a.data !== b.data) return a.data.localeCompare(b.data);
+          return a.horario.localeCompare(b.horario);
+        })
+      }));
+    }
+  };
+
+  const updateAppointment = async (id: string, updates: Partial<Appointment>) => {
+    if (!user) return;
+    const fields: any = {};
+    if (updates.customer_id !== undefined) fields.customer_id = updates.customer_id || null;
+    if (updates.titulo !== undefined) fields.titulo = updates.titulo;
+    if (updates.descricao !== undefined) fields.descricao = updates.descricao;
+    if (updates.data !== undefined) fields.data = updates.data;
+    if (updates.horario !== undefined) fields.horario = updates.horario;
+    if (updates.tipo !== undefined) fields.tipo = updates.tipo;
+    if (updates.status !== undefined) fields.status = updates.status;
+
+    const { data, error } = await supabase.from('appointments').update(fields).eq('id', id).select();
+
+    if (data && !error) {
+      setState(prev => ({
+        ...prev,
+        appointments: prev.appointments.map(a => a.id === id ? { ...a, ...updates } : a)
+          .sort((a, b) => {
+            if (a.data !== b.data) return a.data.localeCompare(b.data);
+            return a.horario.localeCompare(b.horario);
+          })
+      }));
+    }
+  };
+
+  const deleteAppointment = async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from('appointments').delete().eq('id', id);
+    if (!error) {
+      setState(prev => ({ ...prev, appointments: prev.appointments.filter(a => a.id !== id) }));
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -634,6 +711,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addContract, deleteContract,
       addInventoryItem, updateInventoryItem, deleteInventoryItem,
       addSale, updateSaleStatus, deleteSale,
+      addAppointment, updateAppointment, deleteAppointment,
       setAppMode
     }}>
       {!loading && children}
