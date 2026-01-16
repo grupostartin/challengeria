@@ -62,8 +62,10 @@ export interface Transaction {
   descricao: string;
   data: string; // ISO Date string
   dataVencimento?: string; // ISO Date string
-  statusPagamento: 'pendente' | 'pago' | 'atrasado';
+  statusPagamento: 'pendente' | 'pago' | 'atrasado' | 'parcial';
   criadaEm: number;
+  attachment_url?: string;
+  valor_pago?: number;
 }
 
 export interface Contract {
@@ -71,6 +73,7 @@ export interface Contract {
   customer_id: string;
   title: string;
   pdf_url: string;
+  payment_proof_url?: string;
   created_at: number;
 }
 
@@ -140,6 +143,7 @@ export interface AppContextType extends AppState {
   deleteCustomer: (id: string) => Promise<void>;
 
   addContract: (contract: Omit<Contract, 'id' | 'created_at'>) => Promise<void>;
+  updateContract: (id: string, updates: Partial<Contract>) => Promise<void>;
   deleteContract: (id: string) => Promise<void>;
 
   // --- Inventory ---

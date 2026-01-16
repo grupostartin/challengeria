@@ -12,10 +12,13 @@ const formatDate = (timestamp: number) => {
 };
 
 const Contracts: React.FC = () => {
-    const { contracts, customers, addContract, deleteContract } = useApp();
+    const { contracts, customers, addContract, updateContract, deleteContract } = useApp();
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isProofModalOpen, setIsProofModalOpen] = useState(false);
+    const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [proofFile, setProofFile] = useState<File | null>(null);
     const [newContract, setNewContract] = useState({
         title: '',
         customer_id: '',
@@ -68,6 +71,42 @@ const Contracts: React.FC = () => {
         }
     };
 
+    const handleProofUpload = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!proofFile || !selectedContractId) return;
+
+        setIsUploading(true);
+        try {
+            const file = proofFile;
+            const fileExt = file.name.split('.').pop();
+            const fileName = `proof-${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+            const filePath = `contracts/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('contracts')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('contracts')
+                .getPublicUrl(filePath);
+
+            await updateContract(selectedContractId, {
+                payment_proof_url: publicUrl
+            });
+
+            setIsProofModalOpen(false);
+            setProofFile(null);
+            setSelectedContractId(null);
+        } catch (error) {
+            console.error('Error uploading proof:', error);
+            alert('Erro ao fazer upload do comprovante.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const getCustomerName = (id: string) => {
         return customers.find(c => c.id === id)?.nome || 'Cliente não encontrado';
     };
@@ -77,7 +116,7 @@ const Contracts: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Contratos</h1>
-                    <p className="text-slate-400 mt-1">Gerencie os contratos PDF de seus clientes.</p>
+                    <p className="text-slate-400 mt-1">Gerencie os contratos e comprovantes (PDF ou Imagem) de seus clientes.</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
@@ -130,15 +169,40 @@ const Contracts: React.FC = () => {
                             </div>
                         </div>
 
-                        <a
-                            href={contract.pdf_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white transition-all border border-slate-700 group-hover:border-cyan-500/30"
-                        >
-                            <Download size={18} />
-                            Ver / Baixar PDF
-                        </a>
+                        <div className="space-y-3">
+                            <a
+                                href={contract.pdf_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white transition-all border border-slate-700 group-hover:border-cyan-500/30 text-sm"
+                            >
+                                <Download size={16} />
+                                Documento do Contrato
+                            </a>
+
+                            {contract.payment_proof_url ? (
+                                <a
+                                    href={contract.payment_proof_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all border border-emerald-500/20 text-sm"
+                                >
+                                    <Download size={16} />
+                                    Visualizar Comprovante
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        setSelectedContractId(contract.id);
+                                        setIsProofModalOpen(true);
+                                    }}
+                                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all border border-blue-500/20 text-sm"
+                                >
+                                    <Plus size={16} />
+                                    Anexar Comprovante
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ))}
 
@@ -195,19 +259,19 @@ const Contracts: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Arquivo PDF</label>
+                                <label className="block text-sm font-medium text-slate-400 mb-2">Arquivo (PDF ou Imagem)</label>
                                 <div className="relative">
                                     <input
                                         type="file"
-                                        accept=".pdf"
+                                        accept=".pdf,image/*"
                                         required
                                         onChange={(e) => setNewContract({ ...newContract, file: e.target.files?.[0] || null })}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                     />
                                     <div className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-lg px-4 py-10 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-cyan-500/50 transition-all">
                                         <FileUp size={32} />
-                                        <span>{newContract.file ? newContract.file.name : 'Clique para selecionar o PDF'}</span>
-                                        <span className="text-xs text-slate-600">Apenas arquivos .pdf</span>
+                                        <span>{newContract.file ? newContract.file.name : 'Clique para selecionar o arquivo'}</span>
+                                        <span className="text-xs text-slate-600">PDF ou Imagens</span>
                                     </div>
                                 </div>
                             </div>
@@ -232,6 +296,65 @@ const Contracts: React.FC = () => {
                                         </>
                                     ) : (
                                         'Salvar Contrato'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {isProofModalOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="glass-panel w-full max-w-lg p-8 animate-in zoom-in duration-300 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                                <FileUp className="text-emerald-400" />
+                                Comprovante de Pagamento
+                            </h2>
+                            <button onClick={() => setIsProofModalOpen(false)} className="text-slate-400 hover:text-white">
+                                <Plus size={24} className="rotate-45" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleProofUpload} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-2">Arquivo (PDF ou Imagem)</label>
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept=".pdf,image/*"
+                                        required
+                                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    />
+                                    <div className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-lg px-4 py-10 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-emerald-500/50 transition-all">
+                                        <FileUp size={32} />
+                                        <span>{proofFile ? proofFile.name : 'Clique para selecionar o comprovante'}</span>
+                                        <span className="text-xs text-slate-600">PDF ou Imagens</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsProofModalOpen(false)}
+                                    className="flex-1 py-3 text-slate-400 hover:text-white transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isUploading}
+                                    className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isUploading ? (
+                                        <>
+                                            <Loader2 className="animate-spin" size={20} />
+                                            Enviando...
+                                        </>
+                                    ) : (
+                                        'Anexar Comprovante'
                                     )}
                                 </button>
                             </div>

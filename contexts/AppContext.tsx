@@ -354,7 +354,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       descricao: transaction.descricao,
       data: transaction.data,
       data_vencimento: transaction.dataVencimento || null,
-      status_pagamento: transaction.statusPagamento || 'pago'
+      status_pagamento: transaction.statusPagamento || 'pago',
+      attachment_url: transaction.attachment_url || null,
+      valor_pago: transaction.valor_pago || 0
     }]).select();
 
     if (data && !error) {
@@ -383,7 +385,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       categoria: updates.categoria,
       descricao: updates.descricao,
       data: updates.data,
-      status_pagamento: updates.statusPagamento
+      status_pagamento: updates.statusPagamento,
+      attachment_url: updates.attachment_url,
+      valor_pago: updates.valor_pago
     };
     if (updates.customer_id !== undefined) fields.customer_id = updates.customer_id || null;
     if (updates.dataVencimento !== undefined) fields.data_vencimento = updates.dataVencimento || null;
@@ -484,7 +488,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       user_id: user.id,
       customer_id: contract.customer_id,
       title: contract.title,
-      pdf_url: contract.pdf_url
+      pdf_url: contract.pdf_url,
+      payment_proof_url: contract.payment_proof_url || null
     }]).select();
 
     if (data && !error) {
@@ -493,6 +498,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         created_at: new Date(data[0].created_at).getTime()
       };
       setState(prev => ({ ...prev, contracts: [newContract, ...prev.contracts] }));
+    }
+  };
+
+  const updateContract = async (id: string, updates: Partial<Contract>) => {
+    if (!user) return;
+    const { data, error } = await supabase.from('contracts').update({
+      title: updates.title,
+      pdf_url: updates.pdf_url,
+      payment_proof_url: updates.payment_proof_url,
+      customer_id: updates.customer_id
+    }).eq('id', id).select();
+
+    if (data && !error) {
+      setState(prev => ({
+        ...prev,
+        contracts: prev.contracts.map(c => c.id === id ? { ...c, ...updates } : c)
+      }));
     }
   };
 
@@ -708,7 +730,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       convertIdeaToTask,
       toggleIdeaShare,
       addCustomer, updateCustomer, deleteCustomer,
-      addContract, deleteContract,
+      addContract, updateContract, deleteContract,
       addInventoryItem, updateInventoryItem, deleteInventoryItem,
       addSale, updateSaleStatus, deleteSale,
       addAppointment, updateAppointment, deleteAppointment,
