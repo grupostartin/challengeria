@@ -204,7 +204,7 @@ const PublicBio: React.FC = () => {
 
                         {/* Watermark CTA */}
                         <motion.a
-                            href="https://wa.me/5511999999999?text=Quero%20uma%20página%20de%20bio%20como%20esta%21"
+                            href="https://wa.me/5531982781618?text=Quero%20uma%20página%20de%20bio%20como%20esta%21"
                             target="_blank"
                             rel="noopener noreferrer"
                             initial={{ y: 50, opacity: 0 }}

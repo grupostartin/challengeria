@@ -217,7 +217,7 @@ const Customers: React.FC = () => {
                                 type="text" value={formData.telefone}
                                 onChange={e => setFormData({ ...formData, telefone: e.target.value })}
                                 className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white outline-none focus:border-cyan-500"
-                                placeholder="(11) 99999-9999"
+                                placeholder="(31) 98278-1618"
                             />
                         </div>
                     </div>
