@@ -7,7 +7,7 @@ import { getBrasiliaDate, formatDisplayDate } from '../lib/dateUtils';
 import { supabase } from '../lib/supabase';
 
 const Finance: React.FC = () => {
-  const { transactions, customers, addTransaction, updateTransaction, deleteTransaction } = useApp();
+  const { transactions, customers, contracts, addTransaction, updateTransaction, deleteTransaction } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProofModalOpen, setIsProofModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -26,6 +26,7 @@ const Finance: React.FC = () => {
     statusPagamento: 'pendente' | 'pago' | 'atrasado' | 'parcial';
     customer_id: string;
     valor_pago: string;
+    contract_id: string;
   }>({
     tipo: 'despesa',
     valor: '',
@@ -36,6 +37,7 @@ const Finance: React.FC = () => {
     statusPagamento: 'pago',
     customer_id: '',
     valor_pago: '',
+    contract_id: '',
     attachment_url: '',
     file: null as File | null
   });
@@ -72,7 +74,8 @@ const Finance: React.FC = () => {
           valor: parseFloat(formData.valor),
           dataVencimento: formData.dataVencimento || undefined,
           attachment_url: publicUrl,
-          valor_pago: parseFloat(formData.valor_pago) || 0
+          valor_pago: parseFloat(formData.valor_pago) || 0,
+          contract_id: formData.contract_id || undefined
         });
       } else {
         await addTransaction({
@@ -80,7 +83,8 @@ const Finance: React.FC = () => {
           valor: parseFloat(formData.valor),
           dataVencimento: formData.dataVencimento || undefined,
           attachment_url: publicUrl,
-          valor_pago: parseFloat(formData.valor_pago) || 0
+          valor_pago: parseFloat(formData.valor_pago) || 0,
+          contract_id: formData.contract_id || undefined
         });
       }
       resetForm();
@@ -135,11 +139,12 @@ const Finance: React.FC = () => {
       valor: t.valor.toString(),
       categoria: t.categoria,
       descricao: t.descricao,
-      data: t.data,
-      dataVencimento: t.dataVencimento || '',
+      data: t.data ? t.data.split('T')[0] : '',
+      dataVencimento: t.dataVencimento ? t.dataVencimento.split('T')[0] : '',
       statusPagamento: t.statusPagamento,
       customer_id: t.customer_id || '',
       valor_pago: t.valor_pago?.toString() || '',
+      contract_id: t.contract_id || '',
       attachment_url: t.attachment_url || '',
       file: null
     });
@@ -158,6 +163,7 @@ const Finance: React.FC = () => {
       statusPagamento: 'pago',
       customer_id: '',
       valor_pago: '',
+      contract_id: '',
       attachment_url: '',
       file: null
     });
@@ -488,6 +494,24 @@ const Finance: React.FC = () => {
               ))}
             </select>
           </div>
+
+          {formData.customer_id && (
+            <div className="animate-in slide-in-from-top-2 duration-300">
+              <label className="block text-xs font-mono text-purple-500 mb-1 uppercase tracking-wider">Contrato Vinculado</label>
+              <select
+                value={formData.contract_id}
+                onChange={e => setFormData({ ...formData, contract_id: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-950 border border-purple-500/30 rounded-lg text-white focus:ring-1 focus:ring-purple-500 outline-none"
+              >
+                <option value="">Nenhum contrato</option>
+                {contracts
+                  .filter(c => c.customer_id === formData.customer_id)
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">Descrição / Título</label>

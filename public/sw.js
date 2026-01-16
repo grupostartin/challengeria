@@ -1,4 +1,4 @@
-const CACHE_NAME = 'challengeria-v1';
+const CACHE_NAME = 'startin-clients-v1';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',

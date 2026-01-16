@@ -21,6 +21,7 @@ export interface Customer {
   email: string;
   telefone: string;
   status: 'ativo' | 'inativo' | 'atraso';
+  portal_token?: string; // Unique token for client portal
   criadoEm: number;
 }
 
@@ -66,6 +67,7 @@ export interface Transaction {
   criadaEm: number;
   attachment_url?: string;
   valor_pago?: number;
+  contract_id?: string;
 }
 
 export interface Contract {
@@ -141,6 +143,7 @@ export interface AppContextType extends AppState {
   addCustomer: (customer: Omit<Customer, 'id' | 'criadoEm'>) => Promise<void>;
   updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
+  togglePortalShare: (id: string) => Promise<string | null>; // Returns portal URL or null
 
   addContract: (contract: Omit<Contract, 'id' | 'created_at'>) => Promise<void>;
   updateContract: (id: string, updates: Partial<Contract>) => Promise<void>;
@@ -163,4 +166,5 @@ export interface AppContextType extends AppState {
 
   setAppMode: (mode: AppMode) => void;
 }
+
 

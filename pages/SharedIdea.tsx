@@ -132,7 +132,7 @@ const SharedIdea: React.FC = () => {
 
                 <div className="mt-6 text-center">
                     <p className="text-slate-500 text-sm">
-                        Compartilhado via <span className="text-cyan-400 font-semibold">ChallengerIA</span>
+                        Compartilhado via <span className="text-cyan-400 font-semibold">Startin Clients</span>
                     </p>
                 </div>
             </div>

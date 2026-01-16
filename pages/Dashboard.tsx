@@ -7,6 +7,19 @@ import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const { ideas, tasks, transactions, inventory, appointments, appMode } = useApp();
+  const [showUpdateModal, setShowUpdateModal] = React.useState(false);
+
+  React.useEffect(() => {
+    const hasSeenUpdate = localStorage.getItem('startin_clients_update_v1');
+    if (!hasSeenUpdate) {
+      setShowUpdateModal(true);
+    }
+  }, []);
+
+  const handleCloseModal = () => {
+    localStorage.setItem('startin_clients_update_v1', 'true');
+    setShowUpdateModal(false);
+  };
 
   const today = getBrasiliaDate();
   const todayAppointments = appointments.filter(a => a.data === today);
@@ -45,6 +58,29 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Update Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <div className="glass-panel max-w-md w-full p-8 rounded-3xl border border-cyan-500/30 text-center shadow-[0_0_50px_rgba(6,182,212,0.2)] animate-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <Activity size={40} className="text-white animate-pulse" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Novo Startin Clients!</h2>
+            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+              O ChallengerIA agora é <span className="text-cyan-400 font-bold">Startin Clients</span>.
+              Atualizamos o ícone e a marca para uma experiência ainda mais premium.
+              <br /><br />
+              <span className="text-xs font-mono text-slate-500 uppercase">Por favor, atualize ou reinstale seu Web App para ver as novas mudanças.</span>
+            </p>
+            <button
+              onClick={handleCloseModal}
+              className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-cyan-500/20"
+            >
+              ENTENDI
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">

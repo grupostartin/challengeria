@@ -77,7 +77,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Cpu className="text-cyan-400" size={20} />
           </div>
           <span className="text-xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">
-            ChallengerIA
+            Startin Clients
           </span>
         </div>
 
@@ -144,7 +144,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <header className="md:hidden glass-panel border-b border-slate-800/50 text-white p-4 flex items-center justify-between shadow-lg z-20 relative">
           <div className="flex items-center gap-2">
             <Cpu className="text-cyan-400" size={20} />
-            <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">ChallengerIA</span>
+            <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Startin Clients</span>
           </div>
           {deferredPrompt && (
             <button

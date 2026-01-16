@@ -61,6 +61,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ...tx,
           dataVencimento: tx.data_vencimento,
           statusPagamento: tx.status_pagamento,
+          contract_id: tx.contract_id,
           criadaEm: new Date(tx.criada_em).getTime()
         })).sort((a, b) => {
           const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
@@ -356,16 +357,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       data_vencimento: transaction.dataVencimento || null,
       status_pagamento: transaction.statusPagamento || 'pago',
       attachment_url: transaction.attachment_url || null,
-      valor_pago: transaction.valor_pago || 0
+      valor_pago: transaction.valor_pago || 0,
+      contract_id: transaction.contract_id || null
     }]).select();
 
     if (data && !error) {
+      // SYNC: Pull proof from contract if not provided
+      let finalAttachmentUrl = transaction.attachment_url;
+      if (!finalAttachmentUrl && transaction.contract_id) {
+        const linkedContract = state.contracts.find(c => c.id === transaction.contract_id);
+        if (linkedContract?.payment_proof_url) {
+          finalAttachmentUrl = linkedContract.payment_proof_url;
+          // Update the transaction in database with the pulled proof
+          await supabase.from('transactions').update({ attachment_url: finalAttachmentUrl }).eq('id', data[0].id);
+        }
+      }
+
       const newTx = {
         ...data[0],
+        attachment_url: finalAttachmentUrl || data[0].attachment_url,
         dataVencimento: data[0].data_vencimento,
         statusPagamento: data[0].status_pagamento,
         criadaEm: new Date(data[0].criada_em).getTime()
       };
+
       setState(prev => ({
         ...prev,
         transactions: [newTx, ...prev.transactions].sort((a, b) => {
@@ -374,32 +389,55 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           return new Date(dateB).getTime() - new Date(dateA).getTime();
         })
       }));
+
+      // SYNC: Push proof to contract if provided and contract has none
+      if (transaction.contract_id && transaction.attachment_url) {
+        await supabase.from('contracts').update({ payment_proof_url: transaction.attachment_url }).eq('id', transaction.contract_id);
+        setState(prev => ({
+          ...prev,
+          contracts: prev.contracts.map(c => c.id === transaction.contract_id ? { ...c, payment_proof_url: transaction.attachment_url } : c)
+        }));
+      }
     }
   };
 
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
     if (!user) return;
-    const fields: any = {
-      tipo: updates.tipo,
-      valor: updates.valor,
-      categoria: updates.categoria,
-      descricao: updates.descricao,
-      data: updates.data,
-      status_pagamento: updates.statusPagamento,
-      attachment_url: updates.attachment_url,
-      valor_pago: updates.valor_pago
-    };
+    const fields: any = {};
+    if (updates.tipo !== undefined) fields.tipo = updates.tipo;
+    if (updates.valor !== undefined) fields.valor = updates.valor;
+    if (updates.categoria !== undefined) fields.categoria = updates.categoria;
+    if (updates.descricao !== undefined) fields.descricao = updates.descricao;
+    if (updates.data !== undefined) fields.data = updates.data;
+    if (updates.statusPagamento !== undefined) fields.status_pagamento = updates.statusPagamento;
+    if (updates.attachment_url !== undefined) fields.attachment_url = updates.attachment_url;
+    if (updates.valor_pago !== undefined) fields.valor_pago = updates.valor_pago;
+    if (updates.contract_id !== undefined) fields.contract_id = updates.contract_id || null;
     if (updates.customer_id !== undefined) fields.customer_id = updates.customer_id || null;
     if (updates.dataVencimento !== undefined) fields.data_vencimento = updates.dataVencimento || null;
 
     const { data, error } = await supabase.from('transactions').update(fields).eq('id', id).select();
 
     if (data && !error) {
+      // SYNC: Pull proof from contract if linking to it and no proof provided
+      let finalAttachmentUrl = updates.attachment_url;
+      const contractId = updates.contract_id !== undefined ? (updates.contract_id || null) : state.transactions.find(t => t.id === id)?.contract_id;
+
+      if (!finalAttachmentUrl && contractId) {
+        const linkedContract = state.contracts.find(c => c.id === contractId);
+        if (linkedContract?.payment_proof_url) {
+          finalAttachmentUrl = linkedContract.payment_proof_url;
+          // Update DB with pulled proof
+          await supabase.from('transactions').update({ attachment_url: finalAttachmentUrl }).eq('id', id);
+        }
+      }
+
       setState(prev => ({
         ...prev,
         transactions: prev.transactions.map(t => t.id === id ? {
           ...t,
           ...updates,
+          attachment_url: finalAttachmentUrl || t.attachment_url,
           dataVencimento: data[0].data_vencimento,
           statusPagamento: data[0].status_pagamento
         } : t).sort((a, b) => {
@@ -408,6 +446,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           return new Date(dateB).getTime() - new Date(dateA).getTime();
         })
       }));
+
+      // SYNC: Push proof to contract if attachment was explicitly provided/changed
+      if (contractId && updates.attachment_url) {
+        await supabase.from('contracts').update({ payment_proof_url: updates.attachment_url }).eq('id', contractId);
+        setState(prev => ({
+          ...prev,
+          contracts: prev.contracts.map(c => c.id === contractId ? { ...c, payment_proof_url: updates.attachment_url } : c)
+        }));
+      }
     }
   };
 
@@ -481,6 +528,46 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const togglePortalShare = async (id: string): Promise<string | null> => {
+    if (!user) return null;
+
+    const customer = state.customers.find(c => c.id === id);
+    if (!customer) return null;
+
+    // If already shared, disable sharing (null the token)
+    if (customer.portal_token) {
+      const { error } = await supabase.from('customers').update({
+        portal_token: null
+      }).eq('id', id);
+
+      if (!error) {
+        setState(prev => ({
+          ...prev,
+          customers: prev.customers.map(c => c.id === id ? { ...c, portal_token: undefined } : c)
+        }));
+      }
+      return null;
+    }
+
+    // Generate new portal token
+    const portalToken = `${id.substring(0, 8)}-${Math.random().toString(36).substring(2, 10)}`;
+
+    const { error } = await supabase.from('customers').update({
+      portal_token: portalToken
+    }).eq('id', id);
+
+    if (!error) {
+      setState(prev => ({
+        ...prev,
+        customers: prev.customers.map(c => c.id === id ? { ...c, portal_token: portalToken } : c)
+      }));
+
+      return `${window.location.origin}/#/portal/${portalToken}`;
+    }
+
+    return null;
+  };
+
   // --- Contracts ---
   const addContract = async (contract: Omit<Contract, 'id' | 'created_at'>) => {
     if (!user) return;
@@ -498,23 +585,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         created_at: new Date(data[0].created_at).getTime()
       };
       setState(prev => ({ ...prev, contracts: [newContract, ...prev.contracts] }));
+
+      // SYNC: Update linked transactions if proof exists
+      if (contract.payment_proof_url) {
+        await supabase.from('transactions').update({ attachment_url: contract.payment_proof_url }).eq('contract_id', data[0].id);
+        setState(prev => ({
+          ...prev,
+          transactions: prev.transactions.map(t => t.contract_id === data[0].id ? { ...t, attachment_url: contract.payment_proof_url } : t)
+        }));
+      }
     }
   };
 
   const updateContract = async (id: string, updates: Partial<Contract>) => {
     if (!user) return;
-    const { data, error } = await supabase.from('contracts').update({
-      title: updates.title,
-      pdf_url: updates.pdf_url,
-      payment_proof_url: updates.payment_proof_url,
-      customer_id: updates.customer_id
-    }).eq('id', id).select();
+
+    // Build update object only with defined fields
+    const fields: any = {};
+    if (updates.title !== undefined) fields.title = updates.title;
+    if (updates.pdf_url !== undefined) fields.pdf_url = updates.pdf_url;
+    if (updates.payment_proof_url !== undefined) fields.payment_proof_url = updates.payment_proof_url;
+    if (updates.customer_id !== undefined) fields.customer_id = updates.customer_id;
+
+    const { data, error } = await supabase.from('contracts').update(fields).eq('id', id).select();
 
     if (data && !error) {
       setState(prev => ({
         ...prev,
         contracts: prev.contracts.map(c => c.id === id ? { ...c, ...updates } : c)
       }));
+
+      // SYNC: Update linked transactions if proof changed
+      if (updates.payment_proof_url) {
+        await supabase.from('transactions').update({ attachment_url: updates.payment_proof_url }).eq('contract_id', id);
+        setState(prev => ({
+          ...prev,
+          transactions: prev.transactions.map(t => t.contract_id === id ? { ...t, attachment_url: updates.payment_proof_url } : t)
+        }));
+      }
     }
   };
 
@@ -729,7 +837,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addTransaction, updateTransaction, deleteTransaction,
       convertIdeaToTask,
       toggleIdeaShare,
-      addCustomer, updateCustomer, deleteCustomer,
+      addCustomer, updateCustomer, deleteCustomer, togglePortalShare,
       addContract, updateContract, deleteContract,
       addInventoryItem, updateInventoryItem, deleteInventoryItem,
       addSale, updateSaleStatus, deleteSale,

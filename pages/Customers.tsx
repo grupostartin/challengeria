@@ -2,12 +2,22 @@ import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Customer } from '../types';
 import Modal from '../components/Modal';
-import { Plus, Users, Mail, Phone, Clock, AlertCircle, ShoppingBag, Lightbulb, CheckSquare, DollarSign, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Users, Mail, Phone, Clock, AlertCircle, ShoppingBag, Lightbulb, CheckSquare, DollarSign, Trash2, Edit2, Share2, CheckCircle, ShieldCheck } from 'lucide-react';
 
 const Customers: React.FC = () => {
-    const { customers, ideas, tasks, transactions, addCustomer, updateCustomer, deleteCustomer } = useApp();
+    const {
+        customers,
+        ideas,
+        tasks,
+        transactions,
+        addCustomer,
+        updateCustomer,
+        deleteCustomer,
+        togglePortalShare
+    } = useApp();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [copyingId, setCopyingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         nome: '',
         email: '',
@@ -27,6 +37,15 @@ const Customers: React.FC = () => {
             balance,
             hasDebt: customerTransactions.some(tx => tx.tipo === 'despesa' && tx.categoria === 'pendente') // Exemplo simplificado
         };
+    };
+
+    const handlePortalShare = async (id: string) => {
+        const url = await togglePortalShare(id);
+        if (url) {
+            navigator.clipboard.writeText(url);
+            setCopyingId(id);
+            setTimeout(() => setCopyingId(null), 2000);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -88,14 +107,35 @@ const Customers: React.FC = () => {
                                         {customer.status}
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleEdit(customer)} className="text-slate-500 hover:text-cyan-400"><Edit2 size={16} /></button>
+                                        {customer.portal_token && (
+                                            <button
+                                                onClick={() => {
+                                                    const url = `${window.location.origin}/#/portal/${customer.portal_token}`;
+                                                    navigator.clipboard.writeText(url);
+                                                    setCopyingId(customer.id);
+                                                    setTimeout(() => setCopyingId(null), 2000);
+                                                }}
+                                                className="p-1.5 rounded-lg text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 hover:bg-emerald-400/20 transition-all"
+                                                title="Copiar Link do Portal"
+                                            >
+                                                <Share2 size={16} />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => handlePortalShare(customer.id)}
+                                            className={`p-1.5 rounded-lg transition-all ${customer.portal_token ? 'text-amber-400 bg-amber-400/10 border border-amber-400/20' : 'text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10'}`}
+                                            title={customer.portal_token ? "Desativar Portal" : "Ativar Portal do Cliente"}
+                                        >
+                                            <ShieldCheck size={16} />
+                                        </button>
+                                        <button onClick={() => handleEdit(customer)} className="p-1.5 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"><Edit2 size={16} /></button>
                                         <button
                                             onClick={() => {
                                                 if (window.confirm('Tem certeza que deseja excluir este cliente? Isso removerá todos os dados vinculados.')) {
                                                     deleteCustomer(customer.id);
                                                 }
                                             }}
-                                            className="text-slate-500 hover:text-rose-500"
+                                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -103,6 +143,14 @@ const Customers: React.FC = () => {
                                 </div>
 
                                 <h3 className="text-xl font-bold text-white mb-4 group-hover:text-cyan-400 transition-colors uppercase tracking-tight">{customer.nome}</h3>
+
+                                {copyingId === customer.id && (
+                                    <div className="mb-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="text-[10px] text-emerald-500 font-bold uppercase flex items-center gap-1">
+                                            <CheckCircle size={10} /> Link do Portal Copiado!
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="space-y-3 mb-6">
                                     <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -140,6 +188,7 @@ const Customers: React.FC = () => {
                     );
                 })}
             </div>
+
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? 'Editar Cliente' : 'Novo Cliente'}>
                 <form onSubmit={handleSubmit} className="space-y-4">

@@ -15,6 +15,7 @@ import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Agenda from './pages/Agenda';
 import SharedIdea from './pages/SharedIdea';
+import ClientPortal from './pages/ClientPortal';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -41,6 +42,7 @@ const App: React.FC = () => {
       <Routes>
         {/* PUBLIC ROUTE - Must come FIRST and be EXACT */}
         <Route path="/share/:token" element={<SharedIdea />} />
+        <Route path="/portal/:token" element={<ClientPortal />} />
 
         {/* AUTH-REQUIRED ROUTES */}
         <Route path="/login" element={
