@@ -17,7 +17,8 @@ import {
   ShoppingCart,
   Calendar,
   MoreVertical,
-  Download
+  Download,
+  Layout as LayoutIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -64,6 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/financeiro', label: 'Financeiro', icon: DollarSign },
     { path: '/clientes', label: 'Clientes', icon: Users },
     { path: '/contratos', label: 'Contratos', icon: FileText },
+    { path: '/config-bio', label: 'Bio & Leads', icon: LayoutIcon },
   ];
 
   const isActive = (path: string) => location.pathname === path;

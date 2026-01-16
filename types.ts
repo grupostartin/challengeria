@@ -112,6 +112,29 @@ export interface Appointment {
   criadoEm: number;
 }
 
+export interface BioLink {
+  label: string;
+  url: string;
+  image_url?: string;
+}
+
+export interface BioConfig {
+  id: string;
+  user_id: string;
+  username: string;
+  title: string;
+  description: string;
+  avatar_url: string;
+  background_color: string;
+  button_color: string;
+  button_text_color: string;
+  text_color: string;
+  links: BioLink[];
+  show_lead_form: boolean;
+  lead_form_title: string;
+  updated_at: string;
+}
+
 export interface AppState {
   ideas: VideoIdea[];
   tasks: Task[];
@@ -121,6 +144,7 @@ export interface AppState {
   inventory: InventoryItem[];
   sales: Sale[];
   appointments: Appointment[];
+  bioConfig: BioConfig | null;
   appMode: AppMode;
 }
 
@@ -163,6 +187,10 @@ export interface AppContextType extends AppState {
   addAppointment: (appointment: Omit<Appointment, 'id' | 'user_id' | 'criadoEm'>) => Promise<void>;
   updateAppointment: (id: string, updates: Partial<Appointment>) => Promise<void>;
   deleteAppointment: (id: string) => Promise<void>;
+
+  // --- Bio & Leads ---
+  updateBioConfig: (updates: Partial<BioConfig>) => Promise<void>;
+  submitLead: (username: string, lead: { nome: string; email: string; telefone: string; mensagem?: string }) => Promise<void>;
 
   setAppMode: (mode: AppMode) => void;
 }

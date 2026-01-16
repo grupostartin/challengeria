@@ -16,6 +16,8 @@ import Sales from './pages/Sales';
 import Agenda from './pages/Agenda';
 import SharedIdea from './pages/SharedIdea';
 import ClientPortal from './pages/ClientPortal';
+import PublicBio from './pages/PublicBio';
+import BioSettings from './pages/BioSettings';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -43,6 +45,7 @@ const App: React.FC = () => {
         {/* PUBLIC ROUTE - Must come FIRST and be EXACT */}
         <Route path="/share/:token" element={<SharedIdea />} />
         <Route path="/portal/:token" element={<ClientPortal />} />
+        <Route path="/bio/:username" element={<PublicBio />} />
 
         {/* AUTH-REQUIRED ROUTES */}
         <Route path="/login" element={
@@ -159,6 +162,18 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <Layout>
                   <Agenda />
+                </Layout>
+              </ProtectedRoute>
+            </AppProvider>
+          </AuthProvider>
+        } />
+
+        <Route path="/config-bio" element={
+          <AuthProvider>
+            <AppProvider>
+              <ProtectedRoute>
+                <Layout>
+                  <BioSettings />
                 </Layout>
               </ProtectedRoute>
             </AppProvider>

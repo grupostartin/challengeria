@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem, Appointment } from '../types';
+import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem, Appointment, BioConfig } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -16,6 +16,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     inventory: [],
     sales: [],
     appointments: [],
+    bioConfig: null,
     appMode: (localStorage.getItem('appMode') as AppMode) || 'user'
   });
   const [loading, setLoading] = useState(true);
@@ -40,10 +41,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         supabase.from('contracts').select('*').order('created_at', { ascending: false }),
         supabase.from('inventory').select('*').order('criado_em', { ascending: false }),
         supabase.from('sales').select('*, sale_items(*)').order('criado_em', { ascending: false }),
-        supabase.from('appointments').select('*').order('data', { ascending: true }).order('horario', { ascending: true })
+        supabase.from('appointments').select('*').order('data', { ascending: true }).order('horario', { ascending: true }),
+        supabase.from('bio_configs').select('*').single()
       ]);
 
-      const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes, appointmentsRes] = results;
+      const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes, appointmentsRes, bioRes] = results;
 
       setState(prev => ({
         ...prev,
@@ -88,7 +90,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         appointments: (appointmentsRes.data || []).map(a => ({
           ...a,
           criadoEm: new Date(a.criado_em).getTime()
-        }))
+        })),
+        bioConfig: bioRes.data || null
       }));
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -111,7 +114,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       supabase.channel('contracts_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'contracts', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('inventory_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('sales_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'sales', filter: `user_id=eq.${user.id}` }, fetchData),
-      supabase.channel('appointments_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `user_id=eq.${user.id}` }, fetchData)
+      supabase.channel('appointments_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `user_id=eq.${user.id}` }, fetchData),
+      supabase.channel('bio_configs_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'bio_configs', filter: `user_id=eq.${user.id}` }, fetchData)
     ];
 
     channels.forEach(channel => channel.subscribe());
@@ -829,6 +833,70 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  // --- Bio & Leads ---
+  const updateBioConfig = async (updates: Partial<BioConfig>) => {
+    if (!user) return;
+
+    if (state.bioConfig) {
+      const { data, error } = await supabase
+        .from('bio_configs')
+        .update(updates)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (data && !error) {
+        setState(prev => ({ ...prev, bioConfig: data }));
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('bio_configs')
+        .insert([{ ...updates, user_id: user.id }])
+        .select()
+        .single();
+
+      if (data && !error) {
+        setState(prev => ({ ...prev, bioConfig: data }));
+      }
+    }
+  };
+
+  const submitLead = async (username: string, lead: { nome: string; email: string; telefone: string; mensagem?: string }) => {
+    // 1. Find the user ID for this username
+    const { data: bioData, error: bioError } = await supabase
+      .from('bio_configs')
+      .select('user_id')
+      .eq('username', username)
+      .single();
+
+    if (bioError || !bioData) throw new Error('Link-in-bio not found');
+
+    // 2. Create the customer as a "Lead"
+    const { data: customerData, error: customerError } = await supabase
+      .from('customers')
+      .insert([{
+        user_id: bioData.user_id,
+        nome: lead.nome,
+        email: lead.email,
+        telefone: lead.telefone,
+        status: 'ativo'
+      }])
+      .select()
+      .single();
+
+    if (customerError) throw customerError;
+
+    // 3. Create a task for the user to follow up
+    await supabase.from('tasks').insert([{
+      user_id: bioData.user_id,
+      customer_id: customerData.id,
+      titulo: `Novo Lead: ${lead.nome}`,
+      descricao: `Mensagem: ${lead.mensagem || 'Sem mensagem'}\nTelefone: ${lead.telefone}`,
+      coluna: 'todo',
+      tags: ['Lead', 'Bio']
+    }]);
+  };
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -842,6 +910,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addInventoryItem, updateInventoryItem, deleteInventoryItem,
       addSale, updateSaleStatus, deleteSale,
       addAppointment, updateAppointment, deleteAppointment,
+      updateBioConfig, submitLead,
       setAppMode
     }}>
       {!loading && children}
