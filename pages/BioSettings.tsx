@@ -3,7 +3,7 @@ import { useApp } from '../contexts/AppContext';
 import { BioLink, BioConfig } from '../types';
 import { cn } from '../lib/utils';
 import {
-    Layout,
+    Layout as LayoutIcon,
     Link as LinkIcon,
     Palette,
     Save,
@@ -30,6 +30,7 @@ const BioSettings: React.FC = () => {
     const [saved, setSaved] = useState(false);
     const [copied, setCopied] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const bgInputRef = useRef<HTMLInputElement>(null);
 
     // Crop State
     const [cropModal, setCropModal] = useState<{
@@ -51,9 +52,8 @@ const BioSettings: React.FC = () => {
         button_color: '#06b6d4',
         button_text_color: '#ffffff',
         text_color: '#ffffff',
-        links: [],
-        show_lead_form: true,
-        lead_form_title: 'Solicitar Orçamento'
+        background_image_url: '',
+        links: []
     });
 
     useEffect(() => {
@@ -151,6 +151,37 @@ const BioSettings: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
+    const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropModal({
+                open: true,
+                image: reader.result as string,
+                aspect: 9 / 16,
+                onComplete: async (blob: Blob) => {
+                    const fileName = `${Math.random().toString(36).substring(2)}.jpg`;
+                    const filePath = `backgrounds/${fileName}`;
+
+                    const { error: uploadError } = await supabase.storage
+                        .from('bios')
+                        .upload(filePath, blob);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('bios')
+                        .getPublicUrl(filePath);
+
+                    setFormData(prev => ({ ...prev, background_image_url: publicUrl }));
+                }
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleLinkImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -183,32 +214,32 @@ const BioSettings: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="space-y-6 pb-24">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                        <Layout className="text-cyan-400" /> Bio & Lead Capture
+                        <LayoutIcon className="text-cyan-400" /> Página Bio
                     </h1>
-                    <p className="text-slate-400 text-sm">Configure sua página pública e link-in-bio</p>
+                    <p className="text-slate-400 text-sm">Configure sua página de links personalizada</p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 w-full sm:w-auto">
                     {bioConfig && (
                         <button
                             onClick={copyUrl}
-                            className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-all border border-slate-700"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-all border border-slate-700"
                         >
                             {copied ? <CheckCircle size={18} className="text-emerald-400" /> : <Copy size={18} />}
-                            <span className="font-medium text-sm">{copied ? 'Copiado!' : 'Copiar URL'}</span>
+                            <span className="font-medium text-sm">{copied ? 'Copiado!' : 'URL'}</span>
                         </button>
                     )}
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="flex items-center gap-2 bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-500 transition-all shadow-lg shadow-cyan-500/20"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-500 transition-all shadow-lg shadow-cyan-500/20"
                     >
                         {saved ? <CheckCircle size={18} /> : <Save size={18} />}
-                        <span className="font-bold">{loading ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar Página'}</span>
+                        <span className="font-bold">{loading ? '...' : saved ? 'Salvo!' : 'Salvar'}</span>
                     </button>
                 </div>
             </div>
@@ -336,6 +367,46 @@ const BioSettings: React.FC = () => {
                                 />
                             </div>
                         </div>
+
+                        <div className="pt-4 border-t border-slate-800">
+                            <label className="block text-xs font-mono text-cyan-500 mb-2 uppercase tracking-wider">Imagem de Fundo da Página (Opcional)</label>
+                            <div className="flex gap-4 items-center">
+                                <div className="w-20 h-32 rounded-lg overflow-hidden bg-slate-900 border border-slate-700 flex-shrink-0 shadow-inner relative group">
+                                    {formData.background_image_url ? (
+                                        <>
+                                            <img src={formData.background_image_url} className="w-full h-full object-cover" alt="BG Preview" />
+                                            <button
+                                                onClick={() => setFormData(prev => ({ ...prev, background_image_url: '' }))}
+                                                className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-rose-400"
+                                            >
+                                                <Trash2 size={20} />
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-700"><ImageIcon size={24} /></div>
+                                    )}
+                                </div>
+                                <div className="flex-1 space-y-3">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        ref={bgInputRef}
+                                        onChange={handleBgUpload}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => bgInputRef.current?.click()}
+                                        disabled={uploading}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-700 transition-all font-bold text-sm disabled:opacity-50"
+                                    >
+                                        {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                        {uploading ? 'Enviando...' : 'Fazer Upload de Fundo'}
+                                    </button>
+                                    <p className="text-[10px] text-slate-500 uppercase tracking-tight">Otimizado para mobile (Retrato). Proporção 9:16 recomendada.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Links Section */}
@@ -421,37 +492,6 @@ const BioSettings: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Lead Form Section */}
-                    <div className="glass-panel p-6 rounded-2xl space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Send size={18} className="text-cyan-400" /> Captura de Leads
-                            </h3>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    className="sr-only peer"
-                                    checked={formData.show_lead_form}
-                                    onChange={e => setFormData({ ...formData, show_lead_form: e.target.checked })}
-                                />
-                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
-                            </label>
-                        </div>
-
-                        {formData.show_lead_form && (
-                            <div className="animate-in fade-in duration-300">
-                                <label className="block text-xs font-mono text-cyan-500 mb-1 uppercase tracking-wider">Título do Formulário</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white outline-none focus:border-cyan-500 transition-all"
-                                    value={formData.lead_form_title}
-                                    onChange={e => setFormData({ ...formData, lead_form_title: e.target.value })}
-                                    placeholder="Ex: Entre em contato"
-                                />
-                                <p className="text-xs text-slate-500 mt-2">Os dados preenchidos pelo visitante serão automaticamente cadastrados como novos Leads no seu CRM.</p>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 {/* Preview Column */}
@@ -463,8 +503,20 @@ const BioSettings: React.FC = () => {
                                 <div className="w-12 h-1 bg-slate-800 rounded-full"></div>
                             </div>
 
-                            <div className="h-full w-full overflow-y-auto pt-8 pb-4 scrollbar-hide" style={{ backgroundColor: formData.background_color }}>
-                                <div className="p-4 flex flex-col items-center">
+                            <div className="h-full w-full overflow-y-auto pt-8 pb-4 scrollbar-hide relative" style={{ backgroundColor: formData.background_color }}>
+                                {formData.background_image_url && (
+                                    <>
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center"
+                                            style={{ backgroundImage: `url(${formData.background_image_url})` }}
+                                        />
+                                        <div
+                                            className="absolute inset-0 backdrop-blur-[1px]"
+                                            style={{ backgroundColor: `${formData.background_color}cc` }}
+                                        />
+                                    </>
+                                )}
+                                <div className="p-4 flex flex-col items-center relative z-10">
                                     {formData.avatar_url && (
                                         <img src={formData.avatar_url} alt="Avatar" className="w-16 h-16 rounded-full border-2 mb-3 shadow-md" style={{ borderColor: formData.button_color }} />
                                     )}
@@ -494,16 +546,6 @@ const BioSettings: React.FC = () => {
                                         ))}
                                     </div>
 
-                                    {formData.show_lead_form && (
-                                        <div className="w-full bg-white/5 border border-white/10 p-3 rounded-xl">
-                                            <p className="text-[9px] font-bold text-center mb-2" style={{ color: formData.text_color }}>{formData.lead_form_title}</p>
-                                            <div className="space-y-1.5 opacity-30">
-                                                <div className="h-6 w-full bg-white/10 rounded-md"></div>
-                                                <div className="h-6 w-full bg-white/10 rounded-md"></div>
-                                                <div className="h-10 w-full bg-white/10 rounded-md shadow-lg" style={{ backgroundColor: formData.button_color }}></div>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 

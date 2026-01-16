@@ -128,7 +128,7 @@ export interface BioConfig {
   background_color: string;
   button_color: string;
   button_text_color: string;
-  text_color: string;
+  background_image_url?: string;
   links: BioLink[];
   show_lead_form: boolean;
   lead_form_title: string;

@@ -2,22 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { BioConfig } from '../types';
-import { ExternalLink, Mail, Phone, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PublicBio: React.FC = () => {
     const { username } = useParams<{ username: string }>();
     const [config, setConfig] = useState<BioConfig | null>(null);
     const [loading, setLoading] = useState(true);
-    const [formLoading, setFormLoading] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
     const [showSplash, setShowSplash] = useState(true);
-    const [formData, setFormData] = useState({
-        nome: '',
-        email: '',
-        telefone: '',
-        mensagem: ''
-    });
 
     useEffect(() => {
         const fetchBio = async () => {
@@ -38,44 +30,6 @@ const PublicBio: React.FC = () => {
 
         fetchBio();
     }, [username]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setFormLoading(true);
-
-        try {
-            // Logica similar ao submitLead do context, mas direta aqui por ser publico
-            const { data: customerData, error: customerError } = await supabase
-                .from('customers')
-                .insert([{
-                    user_id: config?.user_id,
-                    nome: formData.nome,
-                    email: formData.email,
-                    telefone: formData.telefone,
-                    status: 'ativo'
-                }])
-                .select()
-                .single();
-
-            if (customerError) throw customerError;
-
-            await supabase.from('tasks').insert([{
-                user_id: config?.user_id,
-                customer_id: customerData.id,
-                titulo: `Novo Lead: ${formData.nome}`,
-                descricao: `Mensagem: ${formData.mensagem || 'Sem mensagem'}\nTelefone: ${formData.telefone}\nOrigem: Bio Page`,
-                coluna: 'todo',
-                tags: ['Lead', 'Bio']
-            }]);
-
-            setSubmitted(true);
-        } catch (error) {
-            console.error(error);
-            alert('Erro ao enviar. Tente novamente.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
 
     if (loading) {
         return (
@@ -105,14 +59,26 @@ const PublicBio: React.FC = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5 }}
-                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
                     style={{ backgroundColor: config.background_color }}
                 >
+                    {config.background_image_url && (
+                        <>
+                            <div
+                                className="absolute inset-0 bg-cover bg-center z-0"
+                                style={{ backgroundImage: `url(${config.background_image_url})` }}
+                            />
+                            <div
+                                className="absolute inset-0 z-[1] backdrop-blur-[2px]"
+                                style={{ backgroundColor: `${config.background_color}cc` }}
+                            />
+                        </>
+                    )}
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="flex flex-col items-center gap-6"
+                        className="flex flex-col items-center gap-6 relative z-10"
                     >
                         {config.avatar_url ? (
                             <motion.img
@@ -145,10 +111,24 @@ const PublicBio: React.FC = () => {
                     key="content"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="min-h-screen p-6 font-sans flex flex-col items-center overflow-x-hidden"
+                    className="min-h-screen p-6 font-sans flex flex-col items-center overflow-x-hidden relative"
                     style={{ backgroundColor: config.background_color, color: config.text_color }}
                 >
-                    <div className="max-w-md w-full flex flex-col items-center gap-6 mt-12 mb-12">
+                    {/* Background Image Logic */}
+                    {config.background_image_url && (
+                        <>
+                            <div
+                                className="fixed inset-0 bg-cover bg-center z-0"
+                                style={{ backgroundImage: `url(${config.background_image_url})` }}
+                            />
+                            <div
+                                className="fixed inset-0 z-[1] backdrop-blur-[2px]"
+                                style={{ backgroundColor: `${config.background_color}cc` }} // Add some transparency to the color overlay
+                            />
+                        </>
+                    )}
+
+                    <div className="max-w-md w-full flex flex-col items-center gap-6 mt-12 mb-12 relative z-10">
                         {/* Profile Header */}
                         <motion.div
                             initial={{ y: 30, opacity: 0 }}
@@ -222,105 +202,31 @@ const PublicBio: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* Lead Form */}
-                        <AnimatePresence>
-                            {config.show_lead_form && (
-                                <motion.div
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.8 + ((config.links?.length || 0) * 0.15), duration: 0.5 }}
-                                    className="w-full mt-4 bg-black/20 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl"
-                                >
-                                    {submitted ? (
-                                        <motion.div
-                                            initial={{ scale: 0.9, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            className="text-center py-6"
-                                        >
-                                            <CheckCircle2 className="mx-auto mb-4 text-emerald-400" size={48} />
-                                            <h3 className="text-xl font-bold mb-2">Mensagem Enviada!</h3>
-                                            <p className="opacity-70 text-sm">Entraremos em contato em breve.</p>
-                                            <button
-                                                onClick={() => setSubmitted(false)}
-                                                className="mt-6 text-sm underline opacity-50 hover:opacity-100"
-                                            >
-                                                Enviar outra mensagem
-                                            </button>
-                                        </motion.div>
-                                    ) : (
-                                        <form onSubmit={handleSubmit} className="space-y-4">
-                                            <h3 className="text-lg font-bold mb-4 text-center">{config.lead_form_title}</h3>
-
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Seu Nome"
-                                                    required
-                                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 outline-none transition-all"
-                                                    value={formData.nome}
-                                                    onChange={e => setFormData({ ...formData, nome: e.target.value })}
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <input
-                                                    type="email"
-                                                    placeholder="Email"
-                                                    required
-                                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 outline-none transition-all"
-                                                    value={formData.email}
-                                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                />
-                                                <input
-                                                    type="tel"
-                                                    placeholder="Telefone"
-                                                    required
-                                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 outline-none transition-all"
-                                                    value={formData.telefone}
-                                                    onChange={e => setFormData({ ...formData, telefone: e.target.value })}
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <textarea
-                                                    placeholder="Em que posso ajudar?"
-                                                    rows={3}
-                                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-white/30 outline-none transition-all resize-none"
-                                                    value={formData.mensagem}
-                                                    onChange={e => setFormData({ ...formData, mensagem: e.target.value })}
-                                                />
-                                            </div>
-
-                                            <button
-                                                type="submit"
-                                                disabled={formLoading}
-                                                className="w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-xl disabled:opacity-50"
-                                                style={{
-                                                    backgroundColor: config.button_color,
-                                                    color: config.button_text_color
-                                                }}
-                                            >
-                                                {formLoading ? 'Enviando...' : (
-                                                    <>
-                                                        <Send size={18} />
-                                                        Enviar Mensagem
-                                                    </>
-                                                )}
-                                            </button>
-                                        </form>
-                                    )}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        {/* Watermark CTA */}
+                        <motion.a
+                            href="https://wa.me/5511999999999?text=Quero%20uma%20página%20de%20bio%20como%20esta%21"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 2, duration: 0.8 }}
+                            className="mt-12 group flex flex-col items-center gap-2 p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 transition-all active:scale-95"
+                        >
+                            <span className="text-[10px] uppercase tracking-widest opacity-50 font-bold">Crie a sua também</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-black text-emerald-400">POR APENAS R$ 3,99</span>
+                                <ExternalLink size={12} className="text-white opacity-20 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                        </motion.a>
 
                         {/* Footer */}
                         <motion.footer
                             initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.3 }}
-                            transition={{ delay: 1.5 }}
-                            className="mt-12 text-[10px] uppercase tracking-[3px] font-bold"
+                            animate={{ opacity: 0.2 }}
+                            transition={{ delay: 2.5 }}
+                            className="mt-8 mb-12 text-[10px] uppercase tracking-[3px] font-bold"
                         >
-                            Made with Startin Clients
+                            Startin Clients © 2026
                         </motion.footer>
                     </div>
                 </motion.div>

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
-import { MenuBar } from './ui/bottom-menu';
+import { FloatingMenu } from './ui/floating-menu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -65,7 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/financeiro', label: 'Financeiro', icon: DollarSign },
     { path: '/clientes', label: 'Clientes', icon: Users },
     { path: '/contratos', label: 'Contratos', icon: FileText },
-    { path: '/config-bio', label: 'Bio & Leads', icon: LayoutIcon },
+    { path: '/config-bio', label: 'Página Bio', icon: LayoutIcon },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -187,8 +187,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </main>
 
         {/* Floating Bottom Menu for Mobile */}
-        <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[95%] flex justify-center">
-          <MenuBar
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <FloatingMenu
             items={[
               ...navItems.map(item => ({
                 icon: (props: any) => <item.icon {...props} />,
