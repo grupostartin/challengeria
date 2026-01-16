@@ -112,7 +112,7 @@ const Contracts: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500 pb-32">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Contratos</h1>

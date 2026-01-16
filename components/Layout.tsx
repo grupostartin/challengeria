@@ -16,7 +16,8 @@ import {
   User,
   ShoppingCart,
   Calendar,
-  MoreVertical
+  MoreVertical,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -31,6 +32,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { appMode, setAppMode } = useApp();
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -126,7 +146,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Cpu className="text-cyan-400" size={20} />
             <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">ChallengerIA</span>
           </div>
-          <div className="w-6 h-6"></div> {/* Spacer to keep title centered if needed, or just remove if we want left-aligned */}
+          {deferredPrompt && (
+            <button
+              onClick={handleInstall}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs font-bold animate-pulse"
+            >
+              <Download size={14} />
+              INSTALAR
+            </button>
+          )}
+          {!deferredPrompt && <div className="w-6 h-6"></div>}
         </header>
 
         {/* Mobile App Mode Indicator */}
@@ -149,7 +178,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Mobile Menu Overlay removed since we now use the floating bar */}
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto p-4 md:p-8 z-10 relative pb-20 md:pb-8">
+        <main className="flex-1 overflow-y-auto md:overflow-auto p-4 md:p-8 z-10 relative pb-20 md:pb-8">
           <div className="max-w-7xl mx-auto h-full">
             {children}
           </div>
