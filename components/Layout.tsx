@@ -34,6 +34,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { signOut } = useAuth();
   const { appMode, setAppMode } = useApp();
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+  const [swUpdateAvailable, setSwUpdateAvailable] = React.useState(false);
+  const [waitingWorker, setWaitingWorker] = React.useState<ServiceWorker | null>(null);
 
   React.useEffect(() => {
     const handler = (e: any) => {
@@ -41,8 +43,53 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+
+    // SW Update logic
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) return;
+
+        const checkUpdate = (registration: ServiceWorkerRegistration) => {
+          if (registration.waiting) {
+            setSwUpdateAvailable(true);
+            setWaitingWorker(registration.waiting);
+          }
+        };
+
+        checkUpdate(reg);
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setSwUpdateAvailable(true);
+                setWaitingWorker(newWorker);
+              }
+            });
+          }
+        });
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
   }, []);
+
+  const handleUpdate = () => {
+    if (waitingWorker) {
+      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      setSwUpdateAvailable(false);
+    }
+  };
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -148,7 +195,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Cpu className="text-cyan-400" size={20} />
             <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Startin Clients</span>
           </div>
-          {deferredPrompt && (
+          {swUpdateAvailable ? (
+            <button
+              onClick={handleUpdate}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold animate-pulse"
+            >
+              <Cpu size={14} className="animate-spin" />
+              ATUALIZAR
+            </button>
+          ) : deferredPrompt ? (
             <button
               onClick={handleInstall}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs font-bold animate-pulse"
@@ -156,8 +211,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Download size={14} />
               INSTALAR
             </button>
+          ) : (
+            <div className="w-6 h-6"></div>
           )}
-          {!deferredPrompt && <div className="w-6 h-6"></div>}
         </header>
 
         {/* Mobile App Mode Indicator */}
