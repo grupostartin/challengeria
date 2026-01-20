@@ -1,4 +1,4 @@
-const CACHE_NAME = 'startin-clients-v3';
+const CACHE_NAME = 'startin-clients-v4';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -30,6 +30,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    // Only intercept GET requests
+    if (event.request.method !== 'GET') return;
+
+    // Avoid intercepting Supabase / External API calls
+    const url = new URL(event.request.url);
+    if (url.origin.includes('supabase.co')) return;
+
     event.respondWith(
         caches.match(event.request)
             .then((response) => response || fetch(event.request))
