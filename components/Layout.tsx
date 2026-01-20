@@ -37,43 +37,47 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [swUpdateAvailable, setSwUpdateAvailable] = React.useState(false);
   const [waitingWorker, setWaitingWorker] = React.useState<ServiceWorker | null>(null);
 
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => {
-            console.log('SW registered!', reg);
-            
-            const checkUpdate = (registration: ServiceWorkerRegistration) => {
-              if (registration.waiting) {
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    // SW Update logic
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) return;
+
+        const checkUpdate = (registration: ServiceWorkerRegistration) => {
+          if (registration.waiting) {
+            setSwUpdateAvailable(true);
+            setWaitingWorker(registration.waiting);
+          }
+        };
+
+        checkUpdate(reg);
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 setSwUpdateAvailable(true);
-                setWaitingWorker(registration.waiting);
-              }
-            };
-
-            checkUpdate(reg);
-
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    setSwUpdateAvailable(true);
-                    setWaitingWorker(newWorker);
-                  }
-                });
+                setWaitingWorker(newWorker);
               }
             });
-          })
-          .catch(err => console.log('SW reg error!', err));
-      }
+          }
+        });
+      });
 
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
-        // Only refresh if we explicitly triggered an update
-        if (waitingWorker) {
-          refreshing = true;
-          window.location.reload();
-        }
+        refreshing = true;
+        window.location.reload();
       });
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
@@ -173,7 +177,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             Sair
           </button>
           <div className="text-xs text-slate-600 text-center font-mono pt-2">
-            SYS.VER.1.0.81 BETA
+            SYS.VER.1.0.82 BETA
           </div>
         </div>
       </aside>
