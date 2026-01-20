@@ -528,7 +528,7 @@ const Finance: React.FC = () => {
             <div className="relative group">
               <input
                 type="file"
-                accept=".pdf, application/pdf, image/jpeg, image/png, image/webp"
+                accept="application/pdf,image/jpeg,image/png,image/webp"
                 onChange={e => setFormData({ ...formData, file: e.target.files?.[0] || null })}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
@@ -537,6 +537,7 @@ const Finance: React.FC = () => {
                 <span className="text-sm truncate">
                   {formData.file ? formData.file.name : (formData.attachment_url ? "Substituir comprovante existente" : "Selecionar arquivo...")}
                 </span>
+                <p className="text-[10px] text-slate-500">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
               </div>
             </div>
             {formData.attachment_url && !formData.file && (
@@ -573,7 +574,7 @@ const Finance: React.FC = () => {
               <div className="relative group">
                 <input
                   type="file"
-                  accept=".pdf, application/pdf, image/jpeg, image/png, image/webp"
+                  accept="application/pdf,image/jpeg,image/png,image/webp"
                   required
                   onChange={e => setProofFile(e.target.files?.[0] || null)}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -584,6 +585,7 @@ const Finance: React.FC = () => {
                     {proofFile ? proofFile.name : "Clique para selecionar o arquivo"}
                   </span>
                   <span className="text-[10px] text-slate-600 font-mono">PDF, JPG, PNG, WEBP</span>
+                  <p className="text-[10px] text-slate-400 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                 </div>
               </div>
             </div>

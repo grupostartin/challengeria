@@ -263,7 +263,7 @@ const Contracts: React.FC = () => {
                                 <div className="relative">
                                     <input
                                         type="file"
-                                        accept=".pdf, application/pdf, image/jpeg, image/png, image/webp"
+                                        accept="application/pdf,image/jpeg,image/png,image/webp"
                                         required
                                         onChange={(e) => setNewContract({ ...newContract, file: e.target.files?.[0] || null })}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -272,6 +272,7 @@ const Contracts: React.FC = () => {
                                         <FileUp size={32} />
                                         <span>{newContract.file ? newContract.file.name : 'Clique para selecionar o arquivo'}</span>
                                         <span className="text-xs text-slate-600">PDF ou Imagens</span>
+                                        <p className="text-[10px] text-slate-500 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                                     </div>
                                 </div>
                             </div>
@@ -322,7 +323,7 @@ const Contracts: React.FC = () => {
                                 <div className="relative">
                                     <input
                                         type="file"
-                                        accept=".pdf, application/pdf, image/jpeg, image/png, image/webp"
+                                        accept="application/pdf,image/jpeg,image/png,image/webp"
                                         required
                                         onChange={(e) => setProofFile(e.target.files?.[0] || null)}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -331,6 +332,7 @@ const Contracts: React.FC = () => {
                                         <FileUp size={32} />
                                         <span>{proofFile ? proofFile.name : 'Clique para selecionar o comprovante'}</span>
                                         <span className="text-xs text-slate-600">PDF ou Imagens</span>
+                                        <p className="text-[10px] text-slate-500 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                                     </div>
                                 </div>
                             </div>

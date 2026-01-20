@@ -177,7 +177,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             Sair
           </button>
           <div className="text-xs text-slate-600 text-center font-mono pt-2">
-            SYS.VER.1.0.79 BETA
+            SYS.VER.1.0.80 BETA
           </div>
         </div>
       </aside>
