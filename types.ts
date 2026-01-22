@@ -3,6 +3,7 @@ export type IdeaStatus = 'pendente' | 'processando' | 'concluido' | 'arquivado';
 export type TaskStatus = 'todo' | 'inprogress' | 'done';
 export type TransactionType = 'receita' | 'despesa';
 export type AppMode = 'user' | 'store';
+export type OrganizerType = 'conta_mensal' | 'assinatura' | 'outro';
 
 export interface InventoryItem {
   id: string;
@@ -112,6 +113,18 @@ export interface Appointment {
   criadoEm: number;
 }
 
+export interface FinancialOrganizer {
+  id: string;
+  user_id: string;
+  title: string;
+  amount: number;
+  category: string;
+  type: OrganizerType;
+  due_day: number;
+  active: boolean;
+  created_at: number;
+}
+
 export interface BioLink {
   label: string;
   url: string;
@@ -144,6 +157,7 @@ export interface AppState {
   inventory: InventoryItem[];
   sales: Sale[];
   appointments: Appointment[];
+  financialOrganizers: FinancialOrganizer[];
   bioConfig: BioConfig | null;
   appMode: AppMode;
 }
@@ -191,6 +205,11 @@ export interface AppContextType extends AppState {
   // --- Bio & Leads ---
   updateBioConfig: (updates: Partial<BioConfig>) => Promise<void>;
   submitLead: (username: string, lead: { nome: string; email: string; telefone: string; mensagem?: string }) => Promise<void>;
+
+  // --- Financial Organizers ---
+  addFinancialOrganizer: (organizer: Omit<FinancialOrganizer, 'id' | 'created_at'>) => Promise<void>;
+  updateFinancialOrganizer: (id: string, updates: Partial<FinancialOrganizer>) => Promise<void>;
+  deleteFinancialOrganizer: (id: string) => Promise<void>;
 
   setAppMode: (mode: AppMode) => void;
 }

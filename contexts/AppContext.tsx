@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem, Appointment, BioConfig } from '../types';
+import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem, Appointment, BioConfig, FinancialOrganizer } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -16,6 +16,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     inventory: [],
     sales: [],
     appointments: [],
+    financialOrganizers: [],
     bioConfig: null,
     appMode: (localStorage.getItem('appMode') as AppMode) || 'user'
   });
@@ -25,7 +26,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const fetchData = async () => {
     if (!user) {
       setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [] }));
-      setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [], appointments: [] }));
+      setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [], appointments: [], financialOrganizers: [] }));
       setLoading(false);
       return;
     }
@@ -42,10 +43,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         supabase.from('inventory').select('*').order('criado_em', { ascending: false }),
         supabase.from('sales').select('*, sale_items(*)').order('criado_em', { ascending: false }),
         supabase.from('appointments').select('*').order('data', { ascending: true }).order('horario', { ascending: true }),
-        supabase.from('bio_configs').select('*').single()
+        supabase.from('bio_configs').select('*').single(),
+        supabase.from('financial_organizers').select('*').order('created_at', { ascending: false })
       ]);
 
-      const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes, appointmentsRes, bioRes] = results;
+      const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes, appointmentsRes, bioRes, financialOrganizersRes] = results;
 
       setState(prev => ({
         ...prev,
@@ -91,6 +93,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ...a,
           criadoEm: new Date(a.criado_em).getTime()
         })),
+        financialOrganizers: (financialOrganizersRes.data || []).map(f => ({
+          ...f,
+          created_at: new Date(f.created_at).getTime()
+        })),
         bioConfig: bioRes.data || null
       }));
     } catch (error) {
@@ -115,7 +121,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       supabase.channel('inventory_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'inventory', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('sales_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'sales', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('appointments_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `user_id=eq.${user.id}` }, fetchData),
-      supabase.channel('bio_configs_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'bio_configs', filter: `user_id=eq.${user.id}` }, fetchData)
+      supabase.channel('bio_configs_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'bio_configs', filter: `user_id=eq.${user.id}` }, fetchData),
+      supabase.channel('financial_organizers_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'financial_organizers', filter: `user_id=eq.${user.id}` }, fetchData)
     ];
 
     channels.forEach(channel => channel.subscribe());
@@ -897,6 +904,61 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }]);
   };
 
+  // --- Financial Organizers ---
+  const addFinancialOrganizer = async (organizer: Omit<FinancialOrganizer, 'id' | 'created_at'>) => {
+    if (!user) return;
+    const { data, error } = await supabase.from('financial_organizers').insert([{
+      user_id: user.id,
+      title: organizer.title,
+      amount: organizer.amount,
+      category: organizer.category,
+      type: organizer.type,
+      due_day: organizer.due_day,
+      active: organizer.active
+    }]).select();
+
+    if (data && !error) {
+      const newOrganizer = {
+        ...data[0],
+        created_at: new Date(data[0].created_at).getTime()
+      };
+      setState(prev => ({
+        ...prev,
+        financialOrganizers: [newOrganizer, ...prev.financialOrganizers]
+      }));
+    }
+  };
+
+  const updateFinancialOrganizer = async (id: string, updates: Partial<FinancialOrganizer>) => {
+    if (!user) return;
+
+    // Build update object only with defined fields
+    const fields: any = {};
+    if (updates.title !== undefined) fields.title = updates.title;
+    if (updates.amount !== undefined) fields.amount = updates.amount;
+    if (updates.category !== undefined) fields.category = updates.category;
+    if (updates.type !== undefined) fields.type = updates.type;
+    if (updates.due_day !== undefined) fields.due_day = updates.due_day;
+    if (updates.active !== undefined) fields.active = updates.active;
+
+    const { data, error } = await supabase.from('financial_organizers').update(fields).eq('id', id).select();
+
+    if (data && !error) {
+      setState(prev => ({
+        ...prev,
+        financialOrganizers: prev.financialOrganizers.map(f => f.id === id ? { ...f, ...updates } : f)
+      }));
+    }
+  };
+
+  const deleteFinancialOrganizer = async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from('financial_organizers').delete().eq('id', id);
+    if (!error) {
+      setState(prev => ({ ...prev, financialOrganizers: prev.financialOrganizers.filter(f => f.id !== id) }));
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -911,6 +973,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addSale, updateSaleStatus, deleteSale,
       addAppointment, updateAppointment, deleteAppointment,
       updateBioConfig, submitLead,
+      addFinancialOrganizer, updateFinancialOrganizer, deleteFinancialOrganizer,
       setAppMode
     }}>
       {!loading && children}
