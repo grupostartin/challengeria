@@ -2,11 +2,12 @@ import React from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity, Package, Clock, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
-import { formatDisplayDate, getBrasiliaDate } from '../lib/dateUtils';
+import { formatDisplayDate, getBrasiliaDate, getDayOfMonth, isWeekend, getCurrentMonthName } from '../lib/dateUtils';
+import { AlertCircle, CreditCard, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
-  const { ideas, tasks, transactions, inventory, appointments, appMode } = useApp();
+  const { ideas, tasks, transactions, inventory, appointments, appMode, financialOrganizers } = useApp();
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
 
   React.useEffect(() => {
@@ -50,6 +51,49 @@ const Dashboard: React.FC = () => {
 
   const balance = income - expense;
 
+  // Organizer Calculations
+  const currentDay = getDayOfMonth();
+  const currentMonthName = getCurrentMonthName();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  // Get days in current month to handle wraparound
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  const next3Days = Array.from({ length: 4 }, (_, i) => {
+    let day = currentDay + i;
+    if (day > daysInMonth) day -= daysInMonth;
+    return day;
+  });
+
+  const monthlyBillsTotal = financialOrganizers
+    .filter(f => f.active)
+    .reduce((acc, curr) => acc + curr.amount, 0);
+
+  const upcomingBills = financialOrganizers
+    .filter(f => f.active && next3Days.includes(f.due_day))
+    .map(f => {
+      // If due_day is less than currentDay, it means it's for next month
+      const billMonth = (f.due_day < currentDay) ? currentMonth + 1 : currentMonth;
+      const dueDate = new Date(currentYear, billMonth, f.due_day);
+      return {
+        ...f,
+        isWeekend: isWeekend(dueDate),
+        isToday: f.due_day === currentDay
+      };
+    })
+    .sort((a, b) => {
+      // Sort so today is first, then by proximity
+      if (a.isToday && !b.isToday) return -1;
+      if (!a.isToday && b.isToday) return 1;
+
+      // Proximity logic for wraparound
+      const distA = a.due_day >= currentDay ? a.due_day - currentDay : (daysInMonth - currentDay) + a.due_day;
+      const distB = b.due_day >= currentDay ? b.due_day - currentDay : (daysInMonth - currentDay) + b.due_day;
+      return distA - distB;
+    });
+
   const chartData = [
     { name: 'Recebido', value: income, color: '#10b981' },
     { name: 'Pago', value: expense, color: '#f43f5e' },
@@ -89,6 +133,46 @@ const Dashboard: React.FC = () => {
           <p className="text-sm text-slate-400">Status do sistema e métricas principais</p>
         </div>
       </div>
+
+      {upcomingBills.length > 0 && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="relative overflow-hidden group glass-panel bg-gradient-to-r from-rose-950/40 via-slate-900/40 to-slate-900/40 border-rose-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(244,63,94,0.1)]">
+            <div className="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-inner">
+                <AlertCircle size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-white flex items-center gap-2">
+                  Atenção: {upcomingBills.length} {upcomingBills.length === 1 ? 'conta vincendo' : 'contas vencendo'} em breve!
+                  <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-ping"></span>
+                </h4>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Total imediato: <span className="text-rose-400 font-bold font-mono">R$ {upcomingBills.reduce((acc, b) => acc + b.amount, 0).toFixed(2)}</span>
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {upcomingBills.slice(0, 3).map(bill => (
+                    <span key={bill.id} className={`text-[10px] items-center flex gap-1 font-mono px-2 py-1 rounded border ${bill.isToday ? 'bg-rose-500/20 border-rose-500 text-rose-400 ring-1 ring-rose-500/30' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                      {bill.title} (Dia {bill.due_day})
+                      {bill.isWeekend && <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1 rounded ml-1">FDS</span>}
+                    </span>
+                  ))}
+                  {upcomingBills.length > 3 && <span className="text-[10px] text-slate-500 self-center">...e mais {upcomingBills.length - 3}</span>}
+                </div>
+              </div>
+            </div>
+
+            <Link
+              to="/financeiro?view=organizers"
+              className="flex items-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-4 py-2 rounded-lg border border-rose-500/20 transition-all font-medium text-sm group-hover:border-rose-500/50"
+            >
+              Organizador Financeiro
+              <ExternalLink size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {todayAppointments.length > 0 && (
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
@@ -185,6 +269,21 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="p-3 bg-purple-950/30 border border-purple-500/20 rounded-lg text-purple-400 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.3)] transition-all">
               <TrendingUp size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel p-6 rounded-xl hover:border-rose-500/30 transition-all group">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-400 mb-1">Contas a Pagar ({currentMonthName})</p>
+              <h3 className="text-2xl font-bold text-rose-400">R$ {monthlyBillsTotal.toFixed(2)}</h3>
+              <span className="text-[10px] uppercase font-mono mt-2 inline-block text-slate-500 border border-slate-800 px-2 py-1 rounded bg-slate-950/50">
+                {financialOrganizers.filter(f => f.active).length} contas ativas
+              </span>
+            </div>
+            <div className="p-3 bg-rose-950/30 border border-rose-500/20 rounded-lg text-rose-400 group-hover:shadow-[0_0_10px_rgba(244,63,94,0.3)] transition-all">
+              <CreditCard size={24} />
             </div>
           </div>
         </div>

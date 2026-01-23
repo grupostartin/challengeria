@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 import { TransactionType, Transaction, FinancialOrganizer, OrganizerType } from '../types';
 import Modal from '../components/Modal';
@@ -8,7 +9,16 @@ import { supabase } from '../lib/supabase';
 
 const Finance: React.FC = () => {
   const { transactions, customers, contracts, financialOrganizers, addTransaction, updateTransaction, deleteTransaction, addFinancialOrganizer, updateFinancialOrganizer, deleteFinancialOrganizer } = useApp();
-  const [view, setView] = useState<'transactions' | 'organizers'>('transactions');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialView = (searchParams.get('view') as 'transactions' | 'organizers') || 'transactions';
+  const [view, setView] = useState<'transactions' | 'organizers'>(initialView);
+
+  useEffect(() => {
+    const paramView = searchParams.get('view');
+    if (paramView === 'organizers' || paramView === 'transactions') {
+      setView(paramView);
+    }
+  }, [searchParams]);
   const [isOrganizerModalOpen, setIsOrganizerModalOpen] = useState(false);
   const [editingOrganizerId, setEditingOrganizerId] = useState<string | null>(null);
   const [organizerFormData, setOrganizerFormData] = useState<{
@@ -265,13 +275,13 @@ const Finance: React.FC = () => {
 
         <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-700">
           <button
-            onClick={() => setView('transactions')}
+            onClick={() => setSearchParams({ view: 'transactions' })}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'transactions' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
           >
             Transações
           </button>
           <button
-            onClick={() => setView('organizers')}
+            onClick={() => setSearchParams({ view: 'organizers' })}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'organizers' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
           >
             Organizadores

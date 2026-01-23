@@ -43,3 +43,23 @@ export const getRelativeTime = (timestamp: number) => {
     }
     return rtf.format(diffInDays, 'day');
 };
+
+export const isWeekend = (date: Date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
+};
+
+export const getDayOfMonth = () => {
+    const now = new Date();
+    return parseInt(new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        day: 'numeric'
+    }).format(now));
+};
+
+export const getCurrentMonthName = () => {
+    return new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        month: 'long'
+    }).format(new Date());
+};
