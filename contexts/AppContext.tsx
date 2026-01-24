@@ -372,14 +372,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       contract_id: transaction.contract_id || null
     }]).select();
 
-    if (data && !error) {
+    if (error) {
+      console.error('Error adding transaction:', error);
+      alert('Erro ao salvar transação: ' + error.message);
+      return;
+    }
+
+    if (data) {
       // SYNC: Pull proof from contract if not provided
       let finalAttachmentUrl = transaction.attachment_url;
       if (!finalAttachmentUrl && transaction.contract_id) {
         const linkedContract = state.contracts.find(c => c.id === transaction.contract_id);
         if (linkedContract?.payment_proof_url) {
           finalAttachmentUrl = linkedContract.payment_proof_url;
-          // Update the transaction in database with the pulled proof
           await supabase.from('transactions').update({ attachment_url: finalAttachmentUrl }).eq('id', data[0].id);
         }
       }
@@ -389,6 +394,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         attachment_url: finalAttachmentUrl || data[0].attachment_url,
         dataVencimento: data[0].data_vencimento,
         statusPagamento: data[0].status_pagamento,
+        contract_id: data[0].contract_id,
+        valor_pago: data[0].valor_pago,
         criadaEm: new Date(data[0].criada_em).getTime()
       };
 
@@ -429,7 +436,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { data, error } = await supabase.from('transactions').update(fields).eq('id', id).select();
 
-    if (data && !error) {
+    if (error) {
+      console.error('Error updating transaction:', error);
+      alert('Erro ao atualizar transação: ' + error.message);
+      return;
+    }
+
+    if (data) {
       // SYNC: Pull proof from contract if linking to it and no proof provided
       let finalAttachmentUrl = updates.attachment_url;
       const contractId = updates.contract_id !== undefined ? (updates.contract_id || null) : state.transactions.find(t => t.id === id)?.contract_id;
@@ -438,7 +451,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const linkedContract = state.contracts.find(c => c.id === contractId);
         if (linkedContract?.payment_proof_url) {
           finalAttachmentUrl = linkedContract.payment_proof_url;
-          // Update DB with pulled proof
           await supabase.from('transactions').update({ attachment_url: finalAttachmentUrl }).eq('id', id);
         }
       }
@@ -450,7 +462,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ...updates,
           attachment_url: finalAttachmentUrl || t.attachment_url,
           dataVencimento: data[0].data_vencimento,
-          statusPagamento: data[0].status_pagamento
+          statusPagamento: data[0].status_pagamento,
+          valor_pago: data[0].valor_pago,
+          contract_id: data[0].contract_id,
+          customer_id: data[0].customer_id
         } : t).sort((a, b) => {
           const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
           const dateB = b.data.includes('T') ? b.data : `${b.data}T12:00:00`;

@@ -18,6 +18,7 @@ import SharedIdea from './pages/SharedIdea';
 import ClientPortal from './pages/ClientPortal';
 import PublicBio from './pages/PublicBio';
 import BioSettings from './pages/BioSettings';
+import Help from './pages/Help';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -174,6 +175,18 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <Layout>
                   <BioSettings />
+                </Layout>
+              </ProtectedRoute>
+            </AppProvider>
+          </AuthProvider>
+        } />
+
+        <Route path="/ajuda" element={
+          <AuthProvider>
+            <AppProvider>
+              <ProtectedRoute>
+                <Layout>
+                  <Help />
                 </Layout>
               </ProtectedRoute>
             </AppProvider>

@@ -18,7 +18,8 @@ import {
   Calendar,
   MoreVertical,
   Download,
-  Layout as LayoutIcon
+  Layout as LayoutIcon,
+  HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -169,6 +170,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
 
         <div className="p-4 border-t border-slate-800/50 space-y-2">
+          <Link
+            to="/ajuda"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 border ${isActive('/ajuda')
+              ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border-transparent hover:border-slate-700'
+              }`}
+          >
+            <HelpCircle size={20} className={isActive('/ajuda') ? "animate-pulse-slow" : ""} />
+            Como usar o app?
+          </Link>
           <button
             onClick={() => signOut()}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 border border-transparent hover:border-red-500/30"
@@ -252,6 +263,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 active: location.pathname === item.path,
                 onClick: () => navigate(item.path)
               })),
+              {
+                icon: (props: any) => <HelpCircle {...props} className={location.pathname === '/ajuda' ? 'text-cyan-400' : 'text-slate-400'} />,
+                label: "Ajuda",
+                active: location.pathname === '/ajuda',
+                onClick: () => navigate('/ajuda')
+              },
               {
                 icon: (props: any) => <LogOut {...props} className="text-red-400" />,
                 label: "Sair",

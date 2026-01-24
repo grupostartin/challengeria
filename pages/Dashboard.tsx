@@ -34,20 +34,36 @@ const Dashboard: React.FC = () => {
   const tasksDone = tasks.filter(t => t.coluna === 'done').length;
 
   const income = transactions
-    .filter(t => t.tipo === 'receita' && (t.statusPagamento === 'pago' || !t.statusPagamento))
-    .reduce((acc, curr) => acc + curr.valor, 0);
+    .filter(t => t.tipo === 'receita')
+    .reduce((acc, curr) => {
+      if (curr.statusPagamento === 'pago' || !curr.statusPagamento) return acc + curr.valor;
+      if (curr.statusPagamento === 'parcial') return acc + (curr.valor_pago || 0);
+      return acc;
+    }, 0);
 
   const pendingIncome = transactions
-    .filter(t => t.tipo === 'receita' && (t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado'))
-    .reduce((acc, curr) => acc + curr.valor, 0);
+    .filter(t => t.tipo === 'receita')
+    .reduce((acc, curr) => {
+      if (curr.statusPagamento === 'pendente' || curr.statusPagamento === 'atrasado') return acc + curr.valor;
+      if (curr.statusPagamento === 'parcial') return acc + (curr.valor - (curr.valor_pago || 0));
+      return acc;
+    }, 0);
 
   const expense = transactions
-    .filter(t => t.tipo === 'despesa' && (t.statusPagamento === 'pago' || !t.statusPagamento))
-    .reduce((acc, curr) => acc + curr.valor, 0);
+    .filter(t => t.tipo === 'despesa')
+    .reduce((acc, curr) => {
+      if (curr.statusPagamento === 'pago' || !curr.statusPagamento) return acc + curr.valor;
+      if (curr.statusPagamento === 'parcial') return acc + (curr.valor_pago || 0);
+      return acc;
+    }, 0);
 
   const pendingExpense = transactions
-    .filter(t => t.tipo === 'despesa' && (t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado'))
-    .reduce((acc, curr) => acc + curr.valor, 0);
+    .filter(t => t.tipo === 'despesa')
+    .reduce((acc, curr) => {
+      if (curr.statusPagamento === 'pendente' || curr.statusPagamento === 'atrasado') return acc + curr.valor;
+      if (curr.statusPagamento === 'parcial') return acc + (curr.valor - (curr.valor_pago || 0));
+      return acc;
+    }, 0);
 
   const balance = income - expense;
 
@@ -348,15 +364,23 @@ const Dashboard: React.FC = () => {
             {transactions.slice(0, 3).map(t => (
               <div key={t.id} className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-slate-600 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full shadow-[0_0_8px] ${(t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado') ? 'bg-amber-500 shadow-amber-500/50' : t.tipo === 'receita' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50'}`} />
+                  <div className={`w-2 h-2 rounded-full shadow-[0_0_8px] ${(t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado')
+                      ? 'bg-amber-500 shadow-amber-500/50'
+                      : t.statusPagamento === 'parcial'
+                        ? 'bg-blue-500 shadow-blue-500/50'
+                        : t.tipo === 'receita' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50'
+                    }`} />
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-slate-200">{t.descricao}</p>
+                      <p className="text-sm font-medium text-slate-200">{t.descricao.startsWith('VENDA_ID:') ? `Venda #${t.descricao.split(':')[1].substring(0, 8)}` : t.descricao}</p>
                       {t.statusPagamento === 'pendente' && (
                         <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1 rounded uppercase font-bold">Pendente</span>
                       )}
                       {t.statusPagamento === 'atrasado' && (
                         <span className="text-[9px] bg-rose-500/10 text-rose-500 border border-rose-500/20 px-1 rounded uppercase font-bold animate-pulse">Atrasado</span>
+                      )}
+                      {t.statusPagamento === 'parcial' && (
+                        <span className="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1 rounded uppercase font-bold">Parcial</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
@@ -366,9 +390,21 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <span className={`text-sm font-bold font-mono ${(t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado') ? 'text-amber-500' : t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toFixed(2)}
-                </span>
+                <div className="text-right">
+                  <span className={`text-sm font-bold font-mono ${(t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado')
+                      ? 'text-amber-500'
+                      : t.statusPagamento === 'parcial'
+                        ? 'text-blue-400'
+                        : t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'
+                    }`}>
+                    {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                  {t.statusPagamento === 'parcial' && t.valor_pago != null && (
+                    <div className="text-[9px] text-slate-400 font-mono">
+                      Pago: R$ {t.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
             {tasks.slice(0, 3).map(t => (

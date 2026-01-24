@@ -100,19 +100,19 @@ const Finance: React.FC = () => {
       if (editingId) {
         await updateTransaction(editingId, {
           ...formData,
-          valor: parseFloat(formData.valor),
+          valor: parseFloat(formData.valor.replace(',', '.')) || 0,
           dataVencimento: formData.dataVencimento || undefined,
           attachment_url: publicUrl,
-          valor_pago: parseFloat(formData.valor_pago) || 0,
+          valor_pago: parseFloat(formData.valor_pago.replace(',', '.')) || 0,
           contract_id: formData.contract_id || undefined
         });
       } else {
         await addTransaction({
           ...formData,
-          valor: parseFloat(formData.valor),
+          valor: parseFloat(formData.valor.replace(',', '.')) || 0,
           dataVencimento: formData.dataVencimento || undefined,
           attachment_url: publicUrl,
-          valor_pago: parseFloat(formData.valor_pago) || 0,
+          valor_pago: parseFloat(formData.valor_pago.replace(',', '.')) || 0,
           contract_id: formData.contract_id || undefined
         });
       }
@@ -204,7 +204,7 @@ const Finance: React.FC = () => {
     try {
       const data = {
         ...organizerFormData,
-        amount: parseFloat(organizerFormData.amount) || 0,
+        amount: parseFloat(organizerFormData.amount.replace(',', '.')) || 0,
         due_day: parseInt(organizerFormData.due_day) || 1
       };
 
@@ -401,7 +401,7 @@ const Finance: React.FC = () => {
                       <div className={`font-bold ${t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
-                      {t.statusPagamento === 'parcial' && t.valor_pago && (
+                      {t.statusPagamento === 'parcial' && t.valor_pago != null && (
                         <div className="text-[10px] text-blue-400 mt-1 uppercase">
                           Pago: R$ {t.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
@@ -454,7 +454,7 @@ const Finance: React.FC = () => {
                   </div>
                   <div className={`font-bold font-mono tracking-wide text-sm ${t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    {t.statusPagamento === 'parcial' && t.valor_pago && (
+                    {t.statusPagamento === 'parcial' && t.valor_pago != null && (
                       <div className="text-[10px] text-blue-400 text-right uppercase font-normal">
                         Pago: R$ {t.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
@@ -616,7 +616,7 @@ const Finance: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">Valor Estimado (R$)</label>
-              <input type="number" step="0.01" required value={organizerFormData.amount} onChange={e => setOrganizerFormData({ ...organizerFormData, amount: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="0.00" />
+              <input type="text" inputMode="decimal" required value={organizerFormData.amount} onChange={e => setOrganizerFormData({ ...organizerFormData, amount: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="0.00" />
             </div>
             <div>
               <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">Dia de Vencimento</label>
@@ -654,7 +654,7 @@ const Finance: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">Valor Líquido</label>
-              <input type="number" step="0.01" required value={formData.valor} onChange={e => setFormData({ ...formData, valor: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:ring-1 focus:ring-emerald-500 outline-none font-mono" placeholder="0.00" />
+              <input type="text" inputMode="decimal" required value={formData.valor} onChange={e => setFormData({ ...formData, valor: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:ring-1 focus:ring-emerald-500 outline-none font-mono" placeholder="0.00" />
             </div>
             <div>
               <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">Status Pagamento</label>
@@ -671,8 +671,8 @@ const Finance: React.FC = () => {
             <div className="animate-in slide-in-from-top-2 duration-300">
               <label className="block text-xs font-mono text-blue-500 mb-1 uppercase tracking-wider">Valor Já Pago</label>
               <input
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 required
                 value={formData.valor_pago}
                 onChange={e => setFormData({ ...formData, valor_pago: e.target.value })}
