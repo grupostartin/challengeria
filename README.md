@@ -1,20 +1,93 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🚀 Startin Clients | Ecosystem for Content Creators & Digital Business
 
-# Run and deploy your AI Studio app
+![Banner Challengeria](https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6)
 
-This contains everything you need to run your app locally.
+## 📄 PRD: Documentação de Produto (Product Requirements Document)
 
-View your app in AI Studio: https://ai.studio/apps/drive/16xZxsDa-Q06A05dpw6rDu2em3mjqclq5
+---
 
-## Run Locally
+### 1. Visão Geral do Produto
+**Startin Clients** é uma plataforma "tudo-em-um" desenhada para criadores de conteúdo, agências e profissionais liberais que buscam centralizar sua operação. O projeto combina ferramentas de CRM, Gestão de Projetos (Conteúdo), Financeiro e Marketing (Link-in-Bio) em uma única interface moderna e responsiva.
 
-**Prerequisites:**  Node.js
+---
 
+### 2. Objetivos Principais
+- **Centralização**: Eliminar a necessidade de múltiplas ferramentas (Linktree, Trello, Planilhas, CRM externo).
+- **Escalabilidade**: Oferecer uma estrutura que suporte desde o criador solo até pequenas agências.
+- **Profissionalismo**: Prover um Portal do Cliente e páginas de Bio que transmitam autoridade.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
+
+### 3. Módulos e Funcionalidades Core
+
+#### 📁 Gestão de Conteúdo & Criatividade
+- **Banco de Ideias (Video Ideas)**: Registro e curadoria de ideias para vídeos e conteúdos sociais.
+- **Workflow Kanban**: Gestão visual do status de produção (Ideia, Roteiro, Gravação, Edição, Postado).
+- **Shared Ideas**: Sistema de compartilhamento de insights específicos via tokens seguros.
+
+#### 👥 CRM & Relacionamento
+- **Gestão de Clientes**: Banco de dados centralizado com histórico e contatos.
+- **Controle de Contratos**: Gestão de documentos, datas de vencimento e status de assinatura.
+- **Portal do Cliente**: Área logada (ou via link seguro) para o cliente acompanhar o progresso de seus projetos.
+
+#### 💰 Gestão Operacional & Financeira
+- **Gestão de Vendas**: Registro de transações e performance comercial.
+- **Centro Financeiro**: Fluxo de caixa, controle de entradas/saídas e metas.
+- **Controle de Estoque**: Gerenciamento de itens físicos ou licenças digitais.
+- **Agenda**: Calendário integrado para sessões, reuniões e deadlines.
+
+#### 🔗 Marketing & Presença Digital
+- **Link-in-Bio (Challengeria Bio)**: Página pública personalizada para centralizar links e converter visitantes em leads (Bio Settings).
+- **Lead Capture**: Integração direta entre a página de bio e o CRM.
+
+---
+
+### 4. Arquitetura de Informação (Rotas)
+
+| Rota | Descrição | Status de Acesso |
+| :--- | :--- | :--- |
+| `/` | Dashboard Principal | 🔐 Protegido |
+| `/ideias` | Gestão de Ideias de Vídeo | 🔐 Protegido |
+| `/tarefas` | Quadro Kanban de Produção | 🔐 Protegido |
+| `/financeiro` | Gestão de Fluxo de Caixa | 🔐 Protegido |
+| `/clientes` | Lista e Detalhes de Clientes | 🔐 Protegido |
+| `/contratos` | Gestão de Documentos | 🔐 Protegido |
+| `/estoque` | Controle de Inventário | 🔐 Protegido |
+| `/vendas` | Histórico de Vendas | 🔐 Protegido |
+| `/agenda` | Calendário de Eventos | 🔐 Protegido |
+| `/config-bio` | Editor da Landing Page de Bio | 🔐 Protegido |
+| `/bio/:username`| Landing Page Pública | 🌐 Público |
+| `/portal/:token`| Portal de Acesso do Cliente | 🌐 Público (via Token) |
+| `/share/:token` | Ideia Compartilhada | 🌐 Público (via Token) |
+
+---
+
+### 5. Stack Tecnológica
+- **Frontend**: React 19 (Hooks, Context API)
+- **Tooling**: Vite (HMR ultra-rápido)
+- **Linguagem**: TypeScript
+- **Estilização**: CSS Puro + Tailwind Utility Classes (Via `tailwind-merge`)
+- **Animações**: Framer Motion (Transições fluidas e Splash Screens)
+- **Backend/Auth**: Supabase (PostgreSQL + GoTrue)
+- **Visualização**: Recharts (Gráficos analíticos)
+- **Ícones**: Lucide React
+
+---
+
+### 6. Próximos Passos (Roadmap)
+- [ ] Implementação de notificações Push para prazos de contratos.
+- [ ] Exportação de relatórios financeiros em PDF/Excel.
+- [ ] Integração nativa com APIs de Redes Sociais (Instagram/YouTube Insights).
+- [ ] Modo Offline com sincronização tardia via Service Workers.
+
+---
+
+### 7. Como Executar o Projeto
+1. Clone o repositório.
+2. Instale as dependências: `npm install`.
+3. Configure o `.env.local` com suas credenciais do **Supabase**.
+4. Inicie o servidor de desenvolvimento: `npm run dev`.
+
+---
+
+**Criado com ❤️ para a comunidade desafiadora.**

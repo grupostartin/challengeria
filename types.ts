@@ -148,6 +148,17 @@ export interface BioConfig {
   updated_at: string;
 }
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid';
+  plan_type: 'trial' | 'premium';
+  current_period_end: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  trial_ends_at: string | null;
+}
+
 export interface AppState {
   ideas: VideoIdea[];
   tasks: Task[];

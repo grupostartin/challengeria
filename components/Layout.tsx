@@ -19,7 +19,8 @@ import {
   MoreVertical,
   Download,
   Layout as LayoutIcon,
-  HelpCircle
+  HelpCircle,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -114,6 +115,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/clientes', label: 'Clientes', icon: Users },
     { path: '/contratos', label: 'Contratos', icon: FileText },
     { path: '/config-bio', label: 'Página Bio', icon: LayoutIcon },
+    { path: '/assinatura', label: 'Minha Assinatura', icon: CreditCard },
   ];
 
   const isActive = (path: string) => location.pathname === path;
