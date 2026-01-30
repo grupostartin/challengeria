@@ -19,6 +19,7 @@ import ClientPortal from './pages/ClientPortal';
 import PublicBio from './pages/PublicBio';
 import BioSettings from './pages/BioSettings';
 import Help from './pages/Help';
+import LandingPage from './pages/LandingPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -44,6 +45,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         {/* PUBLIC ROUTE - Must come FIRST and be EXACT */}
+        <Route path="/lp" element={<LandingPage />} />
         <Route path="/share/:token" element={<SharedIdea />} />
         <Route path="/portal/:token" element={<ClientPortal />} />
         <Route path="/bio/:username" element={<PublicBio />} />
