@@ -16,11 +16,33 @@ const PublicBio: React.FC = () => {
             if (!username) return;
             const { data, error } = await supabase
                 .from('bio_configs')
-                .select('*')
+                .select(`
+                    *,
+                    owner:profiles!user_id (
+                        subscription_status,
+                        trial_ends_at,
+                        current_period_end
+                    )
+                `)
                 .eq('username', username)
                 .single();
 
             if (data && !error) {
+                // Check owner subscription
+                const owner = data.owner as any;
+                const now = new Date();
+                const trialEnds = owner.trial_ends_at ? new Date(owner.trial_ends_at) : null;
+                const periodEnd = owner.current_period_end ? new Date(owner.current_period_end) : null;
+
+                const isPremiumActive = owner.plan_type === 'premium' && owner.subscription_status === 'active';
+                const isTrialActive = (owner.plan_type === 'trial' || owner.subscription_status === 'trialing') && trialEnds && trialEnds > now;
+
+                if (!isPremiumActive && !isTrialActive) {
+                    setConfig(null);
+                    setLoading(false);
+                    return;
+                }
+
                 setConfig(data);
                 // Inicia countdown para tirar o splash
                 setTimeout(() => setShowSplash(false), 2500);

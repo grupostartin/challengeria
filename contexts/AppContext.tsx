@@ -43,7 +43,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         supabase.from('inventory').select('*').order('criado_em', { ascending: false }),
         supabase.from('sales').select('*, sale_items(*)').order('criado_em', { ascending: false }),
         supabase.from('appointments').select('*').order('data', { ascending: true }).order('horario', { ascending: true }),
-        supabase.from('bio_configs').select('*').single(),
+        supabase.from('bio_configs').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('financial_organizers').select('*').order('created_at', { ascending: false })
       ]);
 

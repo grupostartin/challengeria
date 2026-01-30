@@ -43,15 +43,37 @@ const ClientPortal: React.FC = () => {
             }
 
             try {
-                // 1. Get Customer
+                // 1. Get Customer and Owner Profile
                 const { data: customerData, error: customerError } = await supabase
                     .from('customers')
-                    .select('*')
+                    .select(`
+                        *,
+                        owner:profiles!user_id (
+                            subscription_status,
+                            trial_ends_at,
+                            current_period_end
+                        )
+                    `)
                     .eq('portal_token', token)
                     .single();
 
                 if (customerError || !customerData) {
                     setError(true);
+                    setLoading(false);
+                    return;
+                }
+
+                // Check owner subscription
+                const owner = customerData.owner as any;
+                const now = new Date();
+                const trialEnds = owner.trial_ends_at ? new Date(owner.trial_ends_at) : null;
+                const periodEnd = owner.current_period_end ? new Date(owner.current_period_end) : null;
+
+                const isPremiumActive = owner.plan_type === 'premium' && owner.subscription_status === 'active';
+                const isTrialActive = (owner.plan_type === 'trial' || owner.subscription_status === 'trialing') && trialEnds && trialEnds > now;
+
+                if (!isPremiumActive && !isTrialActive) {
+                    setError(true); // Treat as not found/expired
                     setLoading(false);
                     return;
                 }

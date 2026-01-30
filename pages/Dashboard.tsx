@@ -5,6 +5,8 @@ import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity, Package, Clock, 
 import { formatDisplayDate, getBrasiliaDate, getDayOfMonth, isWeekend, getCurrentMonthName } from '../lib/dateUtils';
 import { AlertCircle, CreditCard, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../hooks/useSubscription';
 
 const Dashboard: React.FC = () => {
   const { ideas, tasks, transactions, inventory, appointments, appMode, financialOrganizers } = useApp();
@@ -116,8 +118,38 @@ const Dashboard: React.FC = () => {
     { name: 'Saldo Real', value: balance, color: '#06b6d4' },
   ];
 
+  const { profile } = useAuth();
+  const { isTrial, daysRemaining, isPremium } = useSubscription();
+
   return (
     <div className="space-y-6">
+      {/* Trial Warning */}
+      {isTrial && !isPremium && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="relative overflow-hidden glass-panel bg-gradient-to-r from-cyan-950/40 via-slate-900/40 to-slate-900/40 border-cyan-500/20 p-4 rounded-xl flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+                <Clock size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-white">
+                  Período de Teste Ativo
+                </h4>
+                <p className="text-xs text-slate-400">
+                  Você tem <span className="text-cyan-400 font-bold">{daysRemaining} {daysRemaining === 1 ? 'dia restante' : 'dias restantes'}</span> de acesso total gratuito.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/assinatura"
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-cyan-500/20"
+            >
+              ASSINAR PREMIUM
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Update Modal */}
       {showUpdateModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
@@ -365,10 +397,10 @@ const Dashboard: React.FC = () => {
               <div key={t.id} className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-slate-600 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full shadow-[0_0_8px] ${(t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado')
-                      ? 'bg-amber-500 shadow-amber-500/50'
-                      : t.statusPagamento === 'parcial'
-                        ? 'bg-blue-500 shadow-blue-500/50'
-                        : t.tipo === 'receita' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50'
+                    ? 'bg-amber-500 shadow-amber-500/50'
+                    : t.statusPagamento === 'parcial'
+                      ? 'bg-blue-500 shadow-blue-500/50'
+                      : t.tipo === 'receita' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50'
                     }`} />
                   <div>
                     <div className="flex items-center gap-2">
@@ -392,10 +424,10 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <span className={`text-sm font-bold font-mono ${(t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado')
-                      ? 'text-amber-500'
-                      : t.statusPagamento === 'parcial'
-                        ? 'text-blue-400'
-                        : t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'
+                    ? 'text-amber-500'
+                    : t.statusPagamento === 'parcial'
+                      ? 'text-blue-400'
+                      : t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'
                     }`}>
                     {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>

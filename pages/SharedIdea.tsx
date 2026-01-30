@@ -20,7 +20,14 @@ const SharedIdea: React.FC = () => {
 
             const { data, error: fetchError } = await supabase
                 .from('video_ideas')
-                .select('*')
+                .select(`
+                    *,
+                    owner:profiles!user_id (
+                        subscription_status,
+                        trial_ends_at,
+                        current_period_end
+                    )
+                `)
                 .eq('share_token', token)
                 .eq('share_enabled', true)
                 .single();
@@ -28,6 +35,21 @@ const SharedIdea: React.FC = () => {
             if (fetchError || !data) {
                 setError(true);
             } else {
+                // Check owner subscription
+                const owner = data.owner as any;
+                const now = new Date();
+                const trialEnds = owner.trial_ends_at ? new Date(owner.trial_ends_at) : null;
+                const periodEnd = owner.current_period_end ? new Date(owner.current_period_end) : null;
+
+                const isPremiumActive = owner.plan_type === 'premium' && owner.subscription_status === 'active';
+                const isTrialActive = (owner.plan_type === 'trial' || owner.subscription_status === 'trialing') && trialEnds && trialEnds > now;
+
+                if (!isPremiumActive && !isTrialActive) {
+                    setError(true); // Treat as not found/expired
+                    setLoading(false);
+                    return;
+                }
+
                 setIdea({
                     ...data,
                     criadoEm: new Date(data.criado_em).getTime(),
