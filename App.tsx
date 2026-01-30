@@ -26,15 +26,51 @@ import Subscription from './pages/Subscription';
 
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshProfile } = useAuth();
   const { hasAccess, loading: subLoading } = useSubscription();
+  const [verifying, setVerifying] = React.useState(false);
 
-  const loading = authLoading || subLoading;
+  // Check for session_id (Stripe Success)
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+
+    if (sessionId && user) {
+      setVerifying(true);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+  }, [user]);
+
+  // Handle polling and early exit
+  React.useEffect(() => {
+    if (!verifying) return;
+
+    if (hasAccess) {
+      setVerifying(false);
+      return;
+    }
+
+    let count = 0;
+    const interval = setInterval(async () => {
+      await refreshProfile();
+      count++;
+      if (count >= 5) {
+        clearInterval(interval);
+        setVerifying(false);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [verifying, hasAccess, refreshProfile]);
+
+  const loading = authLoading || subLoading || verifying;
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: 'white', gap: '20px' }}>
         <div className="spinner" style={{ border: '4px solid rgba(255,255,255,0.1)', borderTop: '4px solid #3b82f6', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
+        {verifying && <p className="font-bold animate-pulse">Confirmando seu pagamento... Aguarde.</p>}
         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );

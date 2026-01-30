@@ -35,6 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -59,9 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 fetchProfile(session.user.id);
             } else {
                 setProfile(null);
+                setLoading(false);
             }
-
-            setLoading(false);
         });
 
         return () => {
