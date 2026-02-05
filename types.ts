@@ -122,6 +122,8 @@ export interface FinancialOrganizer {
   type: OrganizerType;
   due_day: number;
   active: boolean;
+  total_installments?: number;
+  current_installment?: number;
   created_at: number;
 }
 

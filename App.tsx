@@ -23,6 +23,7 @@ import Help from './pages/Help';
 import LandingPage from './pages/LandingPage';
 import PlanExpired from './pages/PlanExpired';
 import Subscription from './pages/Subscription';
+import QuickAttachment from './pages/QuickAttachment';
 
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -243,6 +244,18 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <Layout>
                   <Subscription />
+                </Layout>
+              </ProtectedRoute>
+            </AppProvider>
+          </AuthProvider>
+        } />
+
+        <Route path="/anexo-rapido" element={
+          <AuthProvider>
+            <AppProvider>
+              <ProtectedRoute>
+                <Layout>
+                  <QuickAttachment />
                 </Layout>
               </ProtectedRoute>
             </AppProvider>

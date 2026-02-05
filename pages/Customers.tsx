@@ -39,10 +39,32 @@ const Customers: React.FC = () => {
         };
     };
 
+    const copyToClipboard = (text: string) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text);
+        } else {
+            // Fallback for mobile/non-secure contexts
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
+    };
+
     const handlePortalShare = async (id: string) => {
         const url = await togglePortalShare(id);
         if (url) {
-            navigator.clipboard.writeText(url);
+            copyToClipboard(url);
             setCopyingId(id);
             setTimeout(() => setCopyingId(null), 2000);
         }
@@ -111,7 +133,7 @@ const Customers: React.FC = () => {
                                             <button
                                                 onClick={() => {
                                                     const url = `${window.location.origin}/#/portal/${customer.portal_token}`;
-                                                    navigator.clipboard.writeText(url);
+                                                    copyToClipboard(url);
                                                     setCopyingId(customer.id);
                                                     setTimeout(() => setCopyingId(null), 2000);
                                                 }}

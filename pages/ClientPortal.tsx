@@ -43,63 +43,33 @@ const ClientPortal: React.FC = () => {
             }
 
             try {
-                // 1. Get Customer and Owner Profile
-                const { data: customerData, error: customerError } = await supabase
-                    .from('customers')
-                    .select(`
-                        *,
-                        owner:profiles!user_id (
-                            subscription_status,
-                            trial_ends_at,
-                            current_period_end
-                        )
-                    `)
-                    .eq('portal_token', token)
-                    .single();
+                // Use RPC to securely fetch data bypassing RLS
+                const { data, error: rpcError } = await supabase.rpc('get_portal_data', { p_token: token });
 
-                if (customerError || !customerData) {
+                if (rpcError) {
+                    throw rpcError;
+                }
+
+                if (!data || data.error) {
+                    console.error('Portal Error:', data?.error || 'No data returned');
                     setError(true);
                     setLoading(false);
                     return;
                 }
 
-                // Check owner subscription
-                const owner = customerData.owner as any;
-                const now = new Date();
-                const trialEnds = owner.trial_ends_at ? new Date(owner.trial_ends_at) : null;
-                const periodEnd = owner.current_period_end ? new Date(owner.current_period_end) : null;
-
-                const isPremiumActive = owner.plan_type === 'premium' && owner.subscription_status === 'active';
-                const isTrialActive = (owner.plan_type === 'trial' || owner.subscription_status === 'trialing') && trialEnds && trialEnds > now;
-
-                if (!isPremiumActive && !isTrialActive) {
-                    setError(true); // Treat as not found/expired
-                    setLoading(false);
-                    return;
-                }
+                const { customer, contracts, transactions } = data;
 
                 setCustomer({
-                    ...customerData,
-                    criadoEm: new Date(customerData.criado_em).getTime()
+                    ...customer,
+                    criadoEm: new Date(customer.criado_em).getTime()
                 });
 
-                // 2. Get Contracts and Transactions in parallel
-                const [contractsRes, transactionsRes] = await Promise.all([
-                    supabase
-                        .from('contracts')
-                        .select('*')
-                        .eq('customer_id', customerData.id)
-                        .order('created_at', { ascending: false }),
-                    supabase
-                        .from('transactions')
-                        .select('*')
-                        .eq('customer_id', customerData.id)
-                        .eq('tipo', 'receita')
-                        .order('data', { ascending: false })
-                ]);
+                setContracts(contracts.map((c: any) => ({
+                    ...c,
+                    created_at: new Date(c.created_at).getTime()
+                })));
 
-                setContracts(contractsRes.data || []);
-                setTransactions((transactionsRes.data || []).map(tx => ({
+                setTransactions(transactions.map((tx: any) => ({
                     ...tx,
                     dataVencimento: tx.data_vencimento,
                     statusPagamento: tx.status_pagamento,

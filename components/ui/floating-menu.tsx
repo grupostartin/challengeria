@@ -1,7 +1,7 @@
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Camera } from "lucide-react"
 
 export interface FloatingMenuItem {
     icon: (props: React.SVGProps<SVGSVGElement>) => React.ReactNode
@@ -39,7 +39,17 @@ export function FloatingMenu({ items, className }: FloatingMenuProps) {
                             exit={{ opacity: 0, scale: 0.8, y: 20 }}
                             className="absolute bottom-20 z-50 w-64 bg-slate-900/95 border border-slate-800 p-2 rounded-3xl shadow-2xl"
                         >
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-3 gap-2 py-2">
+                                <button
+                                    onClick={() => {
+                                        setIsOpen(false)
+                                        window.location.hash = '#/anexo-rapido'
+                                    }}
+                                    className="col-span-3 mb-2 flex items-center justify-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold shadow-lg active:scale-95"
+                                >
+                                    <Camera size={20} />
+                                    <span>TIRAR FOTO / ANEXO RÁPIDO</span>
+                                </button>
                                 {items.map((item, index) => (
                                     <button
                                         key={index}

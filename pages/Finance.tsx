@@ -22,19 +22,19 @@ const Finance: React.FC = () => {
   const [isOrganizerModalOpen, setIsOrganizerModalOpen] = useState(false);
   const [editingOrganizerId, setEditingOrganizerId] = useState<string | null>(null);
   const [organizerFormData, setOrganizerFormData] = useState<{
-    title: string;
-    amount: string;
-    category: string;
-    type: OrganizerType;
     due_day: string;
     active: boolean;
+    total_installments: string;
+    current_installment: string;
   }>({
     title: '',
     amount: '',
     category: '',
     type: 'conta_mensal',
     due_day: '1',
-    active: true
+    active: true,
+    total_installments: '',
+    current_installment: ''
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,6 +44,8 @@ const Finance: React.FC = () => {
   const [filterType, setFilterType] = useState<'all' | 'receita' | 'despesa'>('all');
   const [isUploading, setIsUploading] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const quickProofInputRef = React.useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<{
     tipo: TransactionType;
@@ -205,7 +207,9 @@ const Finance: React.FC = () => {
       const data = {
         ...organizerFormData,
         amount: parseFloat(organizerFormData.amount.replace(',', '.')) || 0,
-        due_day: parseInt(organizerFormData.due_day) || 1
+        due_day: parseInt(organizerFormData.due_day) || 1,
+        total_installments: organizerFormData.total_installments ? parseInt(organizerFormData.total_installments) : undefined,
+        current_installment: organizerFormData.current_installment ? parseInt(organizerFormData.current_installment) : undefined
       };
 
       if (editingOrganizerId) {
@@ -228,7 +232,9 @@ const Finance: React.FC = () => {
       category: item.category,
       type: item.type,
       due_day: item.due_day.toString(),
-      active: item.active
+      active: item.active,
+      total_installments: item.total_installments?.toString() || '',
+      current_installment: item.current_installment?.toString() || ''
     });
     setEditingOrganizerId(item.id);
     setIsOrganizerModalOpen(true);
@@ -241,7 +247,9 @@ const Finance: React.FC = () => {
       category: '',
       type: 'conta_mensal',
       due_day: '1',
-      active: true
+      active: true,
+      total_installments: '',
+      current_installment: ''
     });
     setEditingOrganizerId(null);
   };
@@ -559,6 +567,11 @@ const Finance: React.FC = () => {
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-[10px] uppercase font-mono bg-slate-950 px-1.5 py-0.5 rounded text-slate-500">{item.category}</span>
                               <span className="text-[10px] text-slate-400">Dia {item.due_day}</span>
+                              {item.total_installments && (
+                                <span className="text-[10px] text-cyan-400 bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-800/30">
+                                  Parcela {item.current_installment || '?'}/{item.total_installments}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
@@ -621,6 +634,17 @@ const Finance: React.FC = () => {
             <div>
               <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">Dia de Vencimento</label>
               <input type="number" min="1" max="31" required value={organizerFormData.due_day} onChange={e => setOrganizerFormData({ ...organizerFormData, due_day: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="1-31" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-mono text-purple-500 mb-1 uppercase tracking-wider">Parcela Atual</label>
+              <input type="number" min="1" value={organizerFormData.current_installment} onChange={e => setOrganizerFormData({ ...organizerFormData, current_installment: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="Ex: 1" />
+            </div>
+            <div>
+              <label className="block text-xs font-mono text-purple-500 mb-1 uppercase tracking-wider">Total Parcelas</label>
+              <input type="number" min="1" value={organizerFormData.total_installments} onChange={e => setOrganizerFormData({ ...organizerFormData, total_installments: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="Ex: 12" />
             </div>
           </div>
 
@@ -736,16 +760,22 @@ const Finance: React.FC = () => {
             <div className="relative group">
               <input
                 type="file"
-                accept=".pdf,application/pdf,image/*"
+                ref={fileInputRef}
+                accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
                 onChange={e => setFormData({ ...formData, file: e.target.files?.[0] || null })}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                className="hidden"
               />
-              <div className="w-full px-4 py-3 bg-slate-950 border border-dashed border-slate-700 rounded-lg text-slate-400 group-hover:border-cyan-500/50 transition-all flex items-center gap-3">
-                <FileUp size={18} className="text-cyan-500" />
-                <span className="text-sm truncate">
-                  {formData.file ? formData.file.name : (formData.attachment_url ? "Substituir comprovante existente" : "Selecionar arquivo...")}
-                </span>
-                <p className="text-[10px] text-slate-500">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full px-4 py-3 bg-slate-950 border border-dashed border-slate-700 rounded-lg text-slate-400 group-hover:border-cyan-500/50 transition-all flex items-center justify-between cursor-pointer active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-3 truncate">
+                  <FileUp size={18} className="text-cyan-500" />
+                  <span className="text-sm truncate">
+                    {formData.file ? formData.file.name : (formData.attachment_url ? "Substituir comprovante" : "Toque para selecionar arquivo...")}
+                  </span>
+                </div>
+                <button type="button" className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 whitespace-nowrap">Procurar</button>
               </div>
             </div>
             {formData.attachment_url && !formData.file && (
@@ -782,18 +812,24 @@ const Finance: React.FC = () => {
               <div className="relative group">
                 <input
                   type="file"
-                  accept=".pdf,application/pdf,image/*"
+                  ref={quickProofInputRef}
+                  accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
                   required
                   onChange={e => setProofFile(e.target.files?.[0] || null)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  className="hidden"
                 />
-                <div className="w-full px-4 py-10 bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg text-slate-400 group-hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center gap-3">
-                  <FileUp size={32} className="text-cyan-500" />
-                  <span className="text-sm font-medium">
-                    {proofFile ? proofFile.name : "Clique para selecionar o arquivo"}
+                <div
+                  onClick={() => quickProofInputRef.current?.click()}
+                  className="w-full px-4 py-10 bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg text-slate-400 group-hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer active:scale-[0.98]"
+                >
+                  <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-400">
+                    <FileUp size={32} />
+                  </div>
+                  <span className="text-sm font-medium text-center px-4">
+                    {proofFile ? proofFile.name : "Toque para selecionar o arquivo"}
                   </span>
-                  <span className="text-[10px] text-slate-600 font-mono">PDF, JPG, PNG, WEBP</span>
-                  <p className="text-[10px] text-slate-400 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
+                  <button type="button" className="text-xs bg-slate-800 text-slate-200 px-4 py-2 rounded-full border border-slate-700">Procurar Documento</button>
+                  <p className="text-[10px] text-slate-400 mt-2 text-center">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                 </div>
               </div>
             </div>

@@ -19,6 +19,8 @@ const Contracts: React.FC = () => {
     const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [proofFile, setProofFile] = useState<File | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const proofInputRef = React.useRef<HTMLInputElement>(null);
     const [newContract, setNewContract] = useState({
         title: '',
         customer_id: '',
@@ -260,20 +262,30 @@ const Contracts: React.FC = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-2">Arquivo (PDF ou Imagem)</label>
-                                <div className="relative">
-                                    <input
-                                        type="file"
-                                        accept=".pdf,application/pdf,image/*"
-                                        required
-                                        onChange={(e) => setNewContract({ ...newContract, file: e.target.files?.[0] || null })}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                    />
-                                    <div className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-lg px-4 py-10 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-cyan-500/50 transition-all">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
+                                    className="hidden"
+                                    onChange={(e) => setNewContract({ ...newContract, file: e.target.files?.[0] || null })}
+                                />
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-lg px-4 py-10 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-cyan-500/50 transition-all cursor-pointer group active:scale-[0.98]"
+                                >
+                                    <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
                                         <FileUp size={32} />
-                                        <span>{newContract.file ? newContract.file.name : 'Clique para selecionar o arquivo'}</span>
-                                        <span className="text-xs text-slate-600">PDF ou Imagens</span>
-                                        <p className="text-[10px] text-slate-500 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                                     </div>
+                                    <span className="font-medium text-center px-4">
+                                        {newContract.file ? newContract.file.name : 'Toque para selecionar o arquivo'}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="mt-2 text-xs bg-slate-800 text-slate-300 px-4 py-2 rounded-full border border-slate-700"
+                                    >
+                                        Procurar Arquivo
+                                    </button>
+                                    <p className="text-[10px] text-slate-500 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                                 </div>
                             </div>
 
@@ -320,20 +332,30 @@ const Contracts: React.FC = () => {
                         <form onSubmit={handleProofUpload} className="space-y-6">
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-2">Arquivo (PDF ou Imagem)</label>
-                                <div className="relative">
-                                    <input
-                                        type="file"
-                                        accept=".pdf,application/pdf,image/*"
-                                        required
-                                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                    />
-                                    <div className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-lg px-4 py-10 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-emerald-500/50 transition-all">
+                                <input
+                                    type="file"
+                                    ref={proofInputRef}
+                                    accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
+                                    className="hidden"
+                                    onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                                />
+                                <div
+                                    onClick={() => proofInputRef.current?.click()}
+                                    className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-lg px-4 py-10 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-emerald-500/50 transition-all cursor-pointer group active:scale-[0.98]"
+                                >
+                                    <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
                                         <FileUp size={32} />
-                                        <span>{proofFile ? proofFile.name : 'Clique para selecionar o comprovante'}</span>
-                                        <span className="text-xs text-slate-600">PDF ou Imagens</span>
-                                        <p className="text-[10px] text-slate-500 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                                     </div>
+                                    <span className="font-medium text-center px-4">
+                                        {proofFile ? proofFile.name : 'Toque para selecionar o comprovante'}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="mt-2 text-xs bg-slate-800 text-slate-300 px-4 py-2 rounded-full border border-slate-700"
+                                    >
+                                        Procurar Arquivo
+                                    </button>
+                                    <p className="text-[10px] text-slate-500 mt-2">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                                 </div>
                             </div>
 

@@ -20,7 +20,8 @@ import {
   Download,
   Layout as LayoutIcon,
   HelpCircle,
-  CreditCard
+  CreditCard,
+  Camera
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -116,6 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/contratos', label: 'Contratos', icon: FileText },
     { path: '/config-bio', label: 'Página Bio', icon: LayoutIcon },
     { path: '/assinatura', label: 'Minha Assinatura', icon: CreditCard },
+    { path: '/anexo-rapido', label: 'Câmera Rápida', icon: Camera, mobileOnly: true },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -160,7 +162,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${isActive(item.path)
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${item.mobileOnly ? 'md:hidden' : ''} ${isActive(item.path)
                 ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`}
