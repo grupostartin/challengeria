@@ -193,7 +193,7 @@ const Dashboard: React.FC = () => {
               Conheça o <img src="/logo.png" alt="UPStartin" className="h-10 w-auto" />
             </h2>
             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-              O ChallengerIA agora é <img src="/logo.png" alt="UPStartin" className="h-4 w-auto inline-block mx-1" />.
+              O StartinClients agora é <img src="/logo.png" alt="UPStartin" className="h-4 w-auto inline-block mx-1" />.
               Atualizamos o ícone e a marca para uma experiência ainda mais premium.
               <br /><br />
               <span className="text-xs font-mono text-slate-500 uppercase">Por favor, atualize ou reinstale seu Web App para ver as novas mudanças.</span>
