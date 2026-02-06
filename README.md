@@ -1,89 +1,90 @@
 # 🚀 UPStartin | Ecosystem for Content Creators & Digital Business
 
-![Banner Challengeria](https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6)
+![Banner UPStartin](https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6)
 
-## 📄 PRD: Documentação de Produto (Product Requirements Document)
-
----
-
-### 1. Visão Geral do Produto
-**UPStartin** é uma plataforma "tudo-em-um" desenhada para criadores de conteúdo, agências e profissionais liberais que buscam centralizar sua operação. O projeto combina ferramentas de CRM, Gestão de Projetos (Conteúdo), Financeiro e Marketing (Link-in-Bio) em uma única interface moderna e responsiva.
+**UPStartin** é uma plataforma robusta e intuitiva projetada para centralizar a gestão de criadores de conteúdo, agências e empreendedores digitais. Unificamos CRM, Gestão de Projetos, Controle Financeiro e Marketing Digital em um único ecossistema premium.
 
 ---
 
-### 2. Objetivos Principais
-- **Centralização**: Eliminar a necessidade de múltiplas ferramentas (Linktree, Trello, Planilhas, CRM externo).
-- **Escalabilidade**: Oferecer uma estrutura que suporte desde o criador solo até pequenas agências.
-- **Profissionalismo**: Prover um Portal do Cliente e páginas de Bio que transmitam autoridade.
+## 🌟 Principais Módulos
+
+### 📊 Dashboard Estratégico
+Visão geral em tempo real da saúde do seu negócio, incluindo métricas financeiras, tarefas próximas do prazo e compromissos da agenda.
+
+### 📁 Gestão de Projetos (Kanban)
+Workflow visual para produção de conteúdo. Organize sua criação desde a ideia inicial até a postagem final com um quadro Kanban dinâmico.
+
+### 💰 Centro Financeiro Avançado
+- **Fluxo de Caixa**: Registro detalhado de receitas e despesas.
+- **Organizadores Financeiros**: Gestão de contas mensais, assinaturas recorrentes e metas de faturamento.
+- **Anexos**: Suporte para comprovantes e notas fiscais.
+
+### 👥 CRM & Relacionamento
+- **Base de Clientes**: Gestão centralizada de contatos e histórico.
+- **Portal do Cliente**: Área exclusiva para seus clientes acompanharem o progresso de projetos e acessarem documentos via link seguro.
+
+### � Gestão de Contratos
+Armazenamento e controle de documentos contratuais com rastreamento de status e integração com o financeiro.
+
+### 📦 Estoque & Vendas
+- **Controle de Inventário**: Gerencie produtos físicos ou licenças digitais.
+- **Histórico de Vendas**: Registro de transações comerciais com múltiplos métodos de pagamento (PIX, Cartão, Dinheiro).
+
+### 📅 Agenda Inteligente
+Calendário integrado para agendamento de sessões, reuniões de briefing e prazos críticos.
+
+### 🔗 UPStartin Bio (Marketing)
+- **Link-in-Bio Customizável**: Crie sua própria página de links com design premium.
+- **Captura de Leads**: Formulário de contato integrado diretamente ao seu CRM.
 
 ---
 
-### 3. Módulos e Funcionalidades Core
+## 🛠️ Stack Tecnológica
 
-#### 📁 Gestão de Projetos & Criatividade
-- **Workflow Kanban**: Gestão visual do status de produção (Ideia, Roteiro, Gravação, Edição, Postado).
-
-#### 👥 CRM & Relacionamento
-- **Gestão de Clientes**: Banco de dados centralizado com histórico e contatos.
-- **Controle de Contratos**: Gestão de documentos, datas de vencimento e status de assinatura.
-- **Portal do Cliente**: Área logada (ou via link seguro) para o cliente acompanhar o progresso de seus projetos.
-
-#### 💰 Gestão Operacional & Financeira
-- **Gestão de Vendas**: Registro de transações e performance comercial.
-- **Centro Financeiro**: Fluxo de caixa, controle de entradas/saídas e metas.
-- **Controle de Estoque**: Gerenciamento de itens físicos ou licenças digitais.
-- **Agenda**: Calendário integrado para sessões, reuniões e deadlines.
-
-#### 🔗 Marketing & Presença Digital
-- **Link-in-Bio (UPStartin Bio)**: Página pública personalizada para centralizar links e converter visitantes em leads (Bio Settings).
-- **Lead Capture**: Integração direta entre a página de bio e o CRM.
+- **Frontend**: React 19 + TypeScript
+- **Estilização**: Tailwind CSS + Framer Motion (Animações)
+- **Backend/Database**: Supabase (PostgreSQL + Auth + Storage)
+- **Analytics**: Recharts
+- **Icons**: Lucide React
+- **Pagamentos**: Integração Stripe (Assinaturas Trial/Premium)
 
 ---
 
-### 4. Arquitetura de Informação (Rotas)
+## 🚀 Como Começar
 
-| Rota | Descrição | Status de Acesso |
-| :--- | :--- | :--- |
-| `/` | Dashboard Principal | 🔐 Protegido |
-| `/tarefas` | Quadro Kanban de Produção | 🔐 Protegido |
-| `/financeiro` | Gestão de Fluxo de Caixa | 🔐 Protegido |
-| `/clientes` | Lista e Detalhes de Clientes | 🔐 Protegido |
-| `/contratos` | Gestão de Documentos | 🔐 Protegido |
-| `/estoque` | Controle de Inventário | 🔐 Protegido |
-| `/vendas` | Histórico de Vendas | 🔐 Protegido |
-| `/agenda` | Calendário de Eventos | 🔐 Protegido |
-| `/config-bio` | Editor da Landing Page de Bio | 🔐 Protegido |
-| `/bio/:username`| Landing Page Pública | 🌐 Público |
-| `/portal/:token`| Portal de Acesso do Cliente | 🌐 Público (via Token) |
+1. **Clone o repositório**:
+   ```bash
+   git clone [url-do-repositorio]
+   ```
 
----
+2. **Instale as dependências**:
+   ```bash
+   npm install
+   ```
 
-### 5. Stack Tecnológica
-- **Frontend**: React 19 (Hooks, Context API)
-- **Tooling**: Vite (HMR ultra-rápido)
-- **Linguagem**: TypeScript
-- **Estilização**: CSS Puro + Tailwind Utility Classes (Via `tailwind-merge`)
-- **Animações**: Framer Motion (Transições fluidas e Splash Screens)
-- **Backend/Auth**: Supabase (PostgreSQL + GoTrue)
-- **Visualização**: Recharts (Gráficos analíticos)
-- **Ícones**: Lucide React
+3. **Configure as Variáveis de Ambiente**:
+   Crie um arquivo `.env.local` na raiz com as seguintes chaves:
+   ```env
+   VITE_SUPABASE_URL=seu_url_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+   ```
+
+4. **Inicie o Ambiente de Desenvolvimento**:
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-### 6. Próximos Passos (Roadmap)
-- [ ] Implementação de notificações Push para prazos de contratos.
-- [ ] Exportação de relatórios financeiros em PDF/Excel.
-- [ ] Integração nativa com APIs de Redes Sociais (Instagram/YouTube Insights).
-- [ ] Modo Offline com sincronização tardia via Service Workers.
+## 🗺️ Roadmap de Desenvolvimento
+
+- [x] Implementação do CRM e Kanban.
+- [x] Módulo Financeiro com suporte a anexos.
+- [x] Landing Page de Bio com captura de leads.
+- [ ] Notificações automáticas via WhatsApp/Email.
+- [ ] Exportação de relatórios em PDF.
+- [ ] Dashboard de Insights de Redes Sociais.
 
 ---
 
-### 7. Como Executar o Projeto
-1. Clone o repositório.
-2. Instale as dependências: `npm install`.
-3. Configure o `.env.local` com suas credenciais do **Supabase**.
-4. Inicie o servidor de desenvolvimento: `npm run dev`.
-
----
-
-**Criado com ❤️ para a comunidade desafiadora.**
+**Desenvolvido com foco em alta performance e experiência do usuário.** 🚀

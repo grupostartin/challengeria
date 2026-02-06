@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "project": "UPStartin",
+    "date": "2026-02-06",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "UPStartin is a comprehensive SaaS platform designed to unify fragmented digital tools used by content creators, digital agencies, and freelancers into a single professional ecosystem. It consolidates project management, CRM, financial tracking, contract handling, and marketing into an integrated solution that improves operational efficiency and client transparency.",
+  "core_goals": [
+    "Enhance operational efficiency by reducing tool-switching and manual coordination.",
+    "Increase transparency and trust through a client portal displaying real-time project status.",
+    "Improve financial management with categorized tracking, recurring billing, and document attachments.",
+    "Convert social media organic traffic into verified leads via a customizable link-in-bio profile.",
+    "Ensure high availability and secure user authentication with modern cloud infrastructure."
+  ],
+  "key_features": [
+    "Dashboard providing monthly financial summaries, urgent task alerts, and upcoming appointments.",
+    "Kanban-style project management with dynamic columns and task assignments.",
+    "Comprehensive CRM with client profiles, interaction history, and secure portal tokens.",
+    "Financial center for managing revenues, expenses, fixed and variable costs, with attachment support.",
+    "Contract management including upload, status tracking, and payment linkage.",
+    "Sales and inventory management with stock control and reports.",
+    "UPStartin Bio for creating and customizing public profiles with lead capture forms.",
+    "Secure authentication backed by Supabase Auth and session management.",
+    "Responsive UI adaptable to mobile, tablet, and desktop formats."
+  ],
+  "user_flow_summary": [
+    "User onboarding includes registration, bio profile setup, and client addition.",
+    "Sales cycle from lead capture via bio profile, client conversion, project and contract management, to payment recording.",
+    "Post-sale client interactions through the portal for monitoring project progress and accessing invoices."
+  ],
+  "validation_criteria": [
+    "Dashboard loads within 2 seconds with accurate financial and task data.",
+    "Authentication flow tested for security and session management robustness.",
+    "Kanban tasks support creation, assignment, tagging, and status transitions as designed.",
+    "Financial entries support categorization, attachment uploads, and accurate reporting.",
+    "Contracts are uploaded, status-tracked, and linked correctly to financial payments.",
+    "Client portal securely provides up-to-date project and billing information.",
+    "Responsive design verified across devices with consistent user experience.",
+    "Lead capture forms successfully create CRM prospects and notify users."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "React 19",
+      "Vite",
+      "Supabase",
+      "Tailwind CSS",
+      "Framer Motion",
+      "Lucide React",
+      "Recharts"
+    ],
+    "features": [
+      {
+        "name": "Dashboard",
+        "description": "Main control panel with stats summary and update notifications.",
+        "files": [
+          "pages/Dashboard.tsx",
+          "components/Layout.tsx"
+        ]
+      },
+      {
+        "name": "CRM / Client Management",
+        "description": "Interface for managing client data and interactions.",
+        "files": [
+          "pages/Clients.tsx"
+        ]
+      },
+      {
+        "name": "Kanban Production Workflow",
+        "description": "Visual management of content production stages.",
+        "files": [
+          "pages/TasksKanban.tsx"
+        ]
+      },
+      {
+        "name": "Financial Management",
+        "description": "Tracking of cash flow, monthly bills, and financial summaries.",
+        "files": [
+          "pages/Finance.tsx",
+          "pages/FinanceDashboard.tsx"
+        ]
+      },
+      {
+        "name": "Contract Management",
+        "description": "Managing client contracts and document statuses.",
+        "files": [
+          "pages/Contracts.tsx"
+        ]
+      },
+      {
+        "name": "Client Portal",
+        "description": "Secure public-facing portal for clients to check project status.",
+        "files": [
+          "pages/ClientPortal.tsx"
+        ]
+      },
+      {
+        "name": "Link-in-Bio System",
+        "description": "Public profile builder for social media links.",
+        "files": [
+          "pages/PublicBio.tsx",
+          "pages/BioSettings.tsx"
+        ]
+      },
+      {
+        "name": "Authentication",
+        "description": "User login, registration, and session management using Supabase.",
+        "files": [
+          "contexts/AuthContext.tsx",
+          "pages/Login.tsx"
+        ]
+      }
+    ]
+  }
+}

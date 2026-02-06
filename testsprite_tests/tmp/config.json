@@ -1,0 +1,22 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3002",
+  "loginUser": "teste@teste.com",
+  "loginPassword": "teste123",
+  "executionArgs": {
+    "projectName": "challengeria (1)",
+    "projectPath": "f:\\Backup Sites\\challengeria (1)",
+    "testIds": [
+      "TC001",
+      "TC008"
+    ],
+    "additionalInstruction": "Test the dashboard loading and UI responsiveness on port 3002.",
+    "envs": {
+      "API_KEY": "sk-user-QXKuFSZDgJMNfmEn_G8wFZvZU7lbgwz3DBNXuC7PjGJcPkEhOfxM-l4nQ1tFmv41mPWzxUbkuUZGDo2cwQznKJJW-xKoD-_LPiWg7Uy-YynI9pdvXb7JMTQbe-1L7SJEpHY"
+    }
+  },
+  "serverPort": 50529,
+  "proxy": "http://90963eef-078b-4f61-bbdb-8f213cd39430:Whl5vTwfjr54mKbZIcRzUs82XvztmMSs@tun.testsprite.com:8080"
+}

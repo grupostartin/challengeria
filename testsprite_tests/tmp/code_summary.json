@@ -1,0 +1,74 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "React 19",
+        "Vite",
+        "Supabase",
+        "Tailwind CSS",
+        "Framer Motion",
+        "Lucide React",
+        "Recharts"
+    ],
+    "features": [
+        {
+            "name": "Dashboard",
+            "description": "Main control panel with stats summary and update notifications.",
+            "files": [
+                "pages/Dashboard.tsx",
+                "components/Layout.tsx"
+            ]
+        },
+        {
+            "name": "CRM / Client Management",
+            "description": "Interface for managing client data and interactions.",
+            "files": [
+                "pages/Clients.tsx"
+            ]
+        },
+        {
+            "name": "Kanban Production Workflow",
+            "description": "Visual management of content production stages.",
+            "files": [
+                "pages/TasksKanban.tsx"
+            ]
+        },
+        {
+            "name": "Financial Management",
+            "description": "Tracking of cash flow, monthly bills, and financial summaries.",
+            "files": [
+                "pages/Finance.tsx",
+                "pages/FinanceDashboard.tsx"
+            ]
+        },
+        {
+            "name": "Contract Management",
+            "description": "Managing client contracts and document statuses.",
+            "files": [
+                "pages/Contracts.tsx"
+            ]
+        },
+        {
+            "name": "Client Portal",
+            "description": "Secure public-facing portal for clients to check project status.",
+            "files": [
+                "pages/ClientPortal.tsx"
+            ]
+        },
+        {
+            "name": "Link-in-Bio System",
+            "description": "Public profile builder for social media links.",
+            "files": [
+                "pages/PublicBio.tsx",
+                "pages/BioSettings.tsx"
+            ]
+        },
+        {
+            "name": "Authentication",
+            "description": "User login, registration, and session management using Supabase.",
+            "files": [
+                "contexts/AuthContext.tsx",
+                "pages/Login.tsx"
+            ]
+        }
+    ]
+}

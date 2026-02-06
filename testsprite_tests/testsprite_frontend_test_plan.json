@@ -1,0 +1,291 @@
+[
+  {
+    "id": "TC001",
+    "title": "Dashboard loads within 2 seconds with accurate data",
+    "description": "Verify that the dashboard page loads completely within 2 seconds and displays correct financial summaries, urgent task alerts, and upcoming appointments as per backend data.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login with valid user credentials"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to Dashboard page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page fully loads within 2 seconds"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify monthly financial summaries match backend data"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify urgent task alerts are displayed correctly"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify upcoming appointments are listed accurately"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User registration with valid data",
+    "description": "Check that a new user can register successfully with valid credentials and all mandatory profile data.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to registration page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid registration details (email, password, display name, etc.)"
+      },
+      {
+        "type": "action",
+        "description": "Submit registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify registration succeeds and user is redirected to onboarding"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Authentication session management and security",
+    "description": "Verify user sessions are properly created, maintained, and invalidated on logout, including token expiration handling and protection against unauthorized access.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login with valid credentials"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify session token is created and stored securely"
+      },
+      {
+        "type": "action",
+        "description": "Access protected pages to confirm session validity"
+      },
+      {
+        "type": "action",
+        "description": "Logout from the application"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify session token is invalidated and protected pages are not accessible"
+      },
+      {
+        "type": "action",
+        "description": "Simulate token expiration and check user is logged out or prompted to re-authenticate"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Create, assign, tag, and transition Kanban tasks",
+    "description": "Ensure that users can create new Kanban tasks, assign them to users, add tags, and transition them across dynamic columns correctly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Tasks (Kanban) page"
+      },
+      {
+        "type": "action",
+        "description": "Create a new task with title, description, and tags"
+      },
+      {
+        "type": "action",
+        "description": "Assign the task to a user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify task is visible in the initial column with correct details and tags"
+      },
+      {
+        "type": "action",
+        "description": "Drag and drop task to next column representing status change"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify task status is updated accordingly and reflected persistently"
+      },
+      {
+        "type": "action",
+        "description": "Attempt invalid transitions if applicable and verify errors/blocks"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Financial entry management with categories and attachments",
+    "description": "Test adding, editing, and deleting financial entries while verifying category classification, attaching documents, and checking summary reports for accuracy.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Financial Management page"
+      },
+      {
+        "type": "action",
+        "description": "Add revenue entry with category and attachment document"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the entry appears correctly with proper category and attachment accessible"
+      },
+      {
+        "type": "action",
+        "description": "Edit entry details including category and attachment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates persist and display accurately"
+      },
+      {
+        "type": "action",
+        "description": "Delete the entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify entry is removed and financial summaries update accordingly"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Upload, status tracking, and linking of contracts to payments",
+    "description": "Confirm users can upload contract documents, update their status, and correctly link contracts to related financial payments.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Contracts page"
+      },
+      {
+        "type": "action",
+        "description": "Upload a new contract document"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the contract is listed with correct metadata and status"
+      },
+      {
+        "type": "action",
+        "description": "Update contract status (e.g., pending, signed, completed)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify status updates reflect immediately"
+      },
+      {
+        "type": "action",
+        "description": "Link the contract to a related payment or invoice entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify linkages are visible and functional between contract and payment records"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Client portal project and billing info display securely",
+    "description": "Ensure that clients accessing the secure portal see up-to-date and accurate project status, invoices, and billing information, and that unauthorized access is prevented.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as client with portal token"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify project status is current and matches backend data"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify invoices and billing information are displayed accurately"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access data for other clients"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify unauthorized data access is blocked"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Responsive UI layout across devices",
+    "description": "Verify the application's user interface renders and functions consistently on mobile, tablet, and desktop devices, including layout adaption and element visibility.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access application from desktop browser"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI elements are properly laid out with all features accessible"
+      },
+      {
+        "type": "action",
+        "description": "Access application from tablet device or emulator"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI adapts to tablet screen size and functions correctly"
+      },
+      {
+        "type": "action",
+        "description": "Access application from mobile device or emulator"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI adapts to mobile screen size, menus collapse appropriately, and all functionality remains usable"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Lead capture via customizable bio profile creates CRM prospect",
+    "description": "Test that submitting a lead capture form on the public bio profile successfully creates a new CRM prospect and triggers user notification.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to public bio profile"
+      },
+      {
+        "type": "action",
+        "description": "Fill and submit lead capture form with valid data"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new prospect entry is created in the CRM"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user receives notification of new lead"
+      }
+    ]
+  }
+]
