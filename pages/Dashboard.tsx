@@ -3,13 +3,15 @@ import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity, Package, Clock, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
 import { formatDisplayDate, getBrasiliaDate, getDayOfMonth, isWeekend, getCurrentMonthName } from '../lib/dateUtils';
-import { AlertCircle, CreditCard, ExternalLink } from 'lucide-react';
+import { AlertCircle, CreditCard, ExternalLink, ArrowUpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 
+import { FinancialOrganizer } from '../types';
+
 const Dashboard: React.FC = () => {
-  const { ideas, tasks, transactions, inventory, appointments, appMode, financialOrganizers } = useApp();
+  const { tasks, transactions, inventory, appointments, appMode, financialOrganizers } = useApp();
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
 
   React.useEffect(() => {
@@ -29,8 +31,7 @@ const Dashboard: React.FC = () => {
   const pendingToday = todayAppointments.filter(a => a.status === 'pendente');
 
   // Stats Calculation
-  const totalIdeas = ideas.length;
-  const ideasInProgress = ideas.filter(i => i.status === 'producao').length;
+
 
   const tasksTodo = tasks.filter(t => t.coluna === 'todo').length;
   const tasksDone = tasks.filter(t => t.coluna === 'done').length;
@@ -79,38 +80,69 @@ const Dashboard: React.FC = () => {
   // Get days in current month to handle wraparound
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  const next3Days = Array.from({ length: 4 }, (_, i) => {
-    let day = currentDay + i;
-    if (day > daysInMonth) day -= daysInMonth;
-    return day;
+  const targetDays = Array.from({ length: 4 }, (_, i) => {
+    const d = new Date();
+    d.setDate(now.getDate() + i);
+    return {
+      date: d,
+      dayOfMonth: d.getDate(),
+      dayOfWeek: d.getDay() === 0 ? 7 : d.getDay()
+    };
   });
 
+  const getFullMonthImpact = (item: FinancialOrganizer) => {
+    if (item.frequency === 'weekly') {
+      let count = 0;
+      const d = new Date(currentYear, currentMonth, 1);
+      while (d.getMonth() === currentMonth) {
+        const dow = d.getDay() === 0 ? 7 : d.getDay();
+        if (dow === item.due_day) count++;
+        d.setDate(d.getDate() + 1);
+      }
+      return item.amount * count;
+    }
+    return item.amount;
+  };
+
   const monthlyBillsTotal = financialOrganizers
-    .filter(f => f.active)
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .filter(f => f.active && f.type !== 'recebimento')
+    .reduce((acc, curr) => acc + getFullMonthImpact(curr), 0);
+
+  const monthlyIncomeTotal = financialOrganizers
+    .filter(f => f.active && f.type === 'recebimento')
+    .reduce((acc, curr) => acc + getFullMonthImpact(curr), 0);
 
   const upcomingBills = financialOrganizers
-    .filter(f => f.active && next3Days.includes(f.due_day))
-    .map(f => {
-      // If due_day is less than currentDay, it means it's for next month
-      const billMonth = (f.due_day < currentDay) ? currentMonth + 1 : currentMonth;
-      const dueDate = new Date(currentYear, billMonth, f.due_day);
-      return {
+    .filter(f => f.active && f.type !== 'recebimento')
+    .flatMap(f => {
+      const matches = targetDays.filter(td => f.frequency === 'weekly' ? td.dayOfWeek === f.due_day : td.dayOfMonth === f.due_day);
+      return matches.map(td => ({
         ...f,
-        isWeekend: isWeekend(dueDate),
-        isToday: f.due_day === currentDay
-      };
+        isWeekend: isWeekend(td.date),
+        isToday: td.dayOfMonth === currentDay && td.date.getMonth() === currentMonth,
+        displayDay: f.frequency === 'weekly'
+          ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][f.due_day - 1]
+          : `Dia ${f.due_day}`,
+        sortDate: td.date
+      }));
     })
-    .sort((a, b) => {
-      // Sort so today is first, then by proximity
-      if (a.isToday && !b.isToday) return -1;
-      if (!a.isToday && b.isToday) return 1;
+    .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime());
 
-      // Proximity logic for wraparound
-      const distA = a.due_day >= currentDay ? a.due_day - currentDay : (daysInMonth - currentDay) + a.due_day;
-      const distB = b.due_day >= currentDay ? b.due_day - currentDay : (daysInMonth - currentDay) + b.due_day;
-      return distA - distB;
-    });
+  const upcomingIncome = financialOrganizers
+    .filter(f => f.active && f.type === 'recebimento')
+    .flatMap(f => {
+      const matches = targetDays.filter(td => f.frequency === 'weekly' ? td.dayOfWeek === f.due_day : td.dayOfMonth === f.due_day);
+      return matches.map(td => ({
+        ...f,
+        isWeekend: isWeekend(td.date),
+        isToday: td.dayOfMonth === currentDay && td.date.getMonth() === currentMonth,
+        displayDay: f.frequency === 'weekly'
+          ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][f.due_day - 1]
+          : `Dia ${f.due_day}`,
+        sortDate: td.date
+      }));
+    })
+    .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime());
 
   const chartData = [
     { name: 'Recebido', value: income, color: '#10b981' },
@@ -200,9 +232,9 @@ const Dashboard: React.FC = () => {
                   Total imediato: <span className="text-rose-400 font-bold font-mono">R$ {upcomingBills.reduce((acc, b) => acc + b.amount, 0).toFixed(2)}</span>
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {upcomingBills.slice(0, 3).map(bill => (
-                    <span key={bill.id} className={`text-[10px] items-center flex gap-1 font-mono px-2 py-1 rounded border ${bill.isToday ? 'bg-rose-500/20 border-rose-500 text-rose-400 ring-1 ring-rose-500/30' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
-                      {bill.title} (Dia {bill.due_day})
+                  {upcomingBills.slice(0, 3).map((bill, idx) => (
+                    <span key={`${bill.id}-${idx}`} className={`text-[10px] items-center flex gap-1 font-mono px-2 py-1 rounded border ${bill.isToday ? 'bg-rose-500/20 border-rose-500 text-rose-400 ring-1 ring-rose-500/30' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                      {bill.title} ({bill.displayDay})
                       {bill.isWeekend && <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1 rounded ml-1">FDS</span>}
                     </span>
                   ))}
@@ -212,11 +244,51 @@ const Dashboard: React.FC = () => {
             </div>
 
             <Link
-              to="/financeiro?view=organizers"
+              to="/financeiro?view=recurrences"
               className="flex items-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-4 py-2 rounded-lg border border-rose-500/20 transition-all font-medium text-sm group-hover:border-rose-500/50"
             >
-              Organizador Financeiro
+              Recorrências Financeiras
               <ExternalLink size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {upcomingIncome.length > 0 && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="relative overflow-hidden group glass-panel bg-gradient-to-r from-emerald-950/40 via-slate-900/40 to-slate-900/40 border-emerald-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-inner">
+                <TrendingUp size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-white flex items-center gap-2">
+                  Ótima notícia: {upcomingIncome.length} {upcomingIncome.length === 1 ? 'recebimento previsto' : 'recebimentos previstos'} em breve!
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                </h4>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Valor a receber: <span className="text-emerald-400 font-bold font-mono">R$ {upcomingIncome.reduce((acc, b) => acc + b.amount, 0).toFixed(2)}</span>
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {upcomingIncome.slice(0, 3).map((item, idx) => (
+                    <span key={`${item.id}-${idx}`} className={`text-[10px] items-center flex gap-1 font-mono px-2 py-1 rounded border ${item.isToday ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 ring-1 ring-emerald-500/30' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                      {item.title} ({item.displayDay})
+                      {item.isWeekend && <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1 rounded ml-1">FDS</span>}
+                    </span>
+                  ))}
+                  {upcomingIncome.length > 3 && <span className="text-[10px] text-slate-500 self-center">...e mais {upcomingIncome.length - 3}</span>}
+                </div>
+              </div>
+            </div>
+
+            <Link
+              to="/financeiro?view=recurrences"
+              className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/20 transition-all font-medium text-sm group-hover:border-emerald-500/50"
+            >
+              Ver Recebimentos
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
@@ -259,20 +331,7 @@ const Dashboard: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-panel p-6 rounded-xl hover:border-cyan-500/30 transition-all group">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-400 mb-1">Total de Ideias</p>
-              <h3 className="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">{totalIdeas}</h3>
-              <span className="text-xs text-cyan-300 bg-cyan-950/50 border border-cyan-900 px-2 py-1 rounded-full mt-2 inline-block">
-                {ideasInProgress} em produção
-              </span>
-            </div>
-            <div className="p-3 bg-cyan-950/30 border border-cyan-500/20 rounded-lg text-cyan-400 group-hover:shadow-[0_0_10px_rgba(6,182,212,0.3)] transition-all">
-              <Lightbulb size={24} />
-            </div>
-          </div>
-        </div>
+
 
         <div className="glass-panel p-6 rounded-xl hover:border-warning/30 transition-all group">
           <div className="flex items-start justify-between">
@@ -327,11 +386,26 @@ const Dashboard: React.FC = () => {
               <p className="text-sm font-medium text-slate-400 mb-1">Contas a Pagar ({currentMonthName})</p>
               <h3 className="text-2xl font-bold text-rose-400">R$ {monthlyBillsTotal.toFixed(2)}</h3>
               <span className="text-[10px] uppercase font-mono mt-2 inline-block text-slate-500 border border-slate-800 px-2 py-1 rounded bg-slate-950/50">
-                {financialOrganizers.filter(f => f.active).length} contas ativas
+                {financialOrganizers.filter(f => f.active && f.type !== 'recebimento').length} contas ativas
               </span>
             </div>
             <div className="p-3 bg-rose-950/30 border border-rose-500/20 rounded-lg text-rose-400 group-hover:shadow-[0_0_10px_rgba(244,63,94,0.3)] transition-all">
               <CreditCard size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel p-6 rounded-xl hover:border-emerald-500/30 transition-all group">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-400 mb-1">Recorrências a Receber</p>
+              <h3 className="text-2xl font-bold text-emerald-400">R$ {monthlyIncomeTotal.toFixed(2)}</h3>
+              <span className="text-[10px] uppercase font-mono mt-2 inline-block text-slate-500 border border-slate-800 px-2 py-1 rounded bg-slate-950/50">
+                {financialOrganizers.filter(f => f.active && f.type === 'recebimento').length} recebimentos ativos
+              </span>
+            </div>
+            <div className="p-3 bg-emerald-950/30 border border-emerald-500/20 rounded-lg text-emerald-400 group-hover:shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all">
+              <ArrowUpCircle size={24} />
             </div>
           </div>
         </div>

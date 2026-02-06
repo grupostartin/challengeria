@@ -7,7 +7,6 @@ import { Plus, Users, Mail, Phone, Clock, AlertCircle, ShoppingBag, Lightbulb, C
 const Customers: React.FC = () => {
     const {
         customers,
-        ideas,
         tasks,
         transactions,
         addCustomer,
@@ -26,13 +25,11 @@ const Customers: React.FC = () => {
     });
 
     const getCustomerStats = (customerId: string) => {
-        const customerIdeas = ideas.filter(i => i.customer_id === customerId);
         const customerTasks = tasks.filter(t => t.customer_id === customerId);
         const customerTransactions = transactions.filter(tx => tx.customer_id === customerId);
         const balance = customerTransactions.reduce((acc, tx) => acc + (tx.tipo === 'receita' ? tx.valor : -tx.valor), 0);
 
         return {
-            ideasCount: customerIdeas.length,
             tasksCount: customerTasks.length,
             balance,
             hasDebt: customerTransactions.some(tx => tx.tipo === 'despesa' && tx.categoria === 'pendente') // Exemplo simplificado
@@ -184,11 +181,7 @@ const Customers: React.FC = () => {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <div className="bg-slate-900/50 border border-slate-800 p-3 rounded-lg flex flex-col items-center justify-center">
-                                        <Lightbulb size={18} className="text-amber-400 mb-1" />
-                                        <span className="text-white font-bold">{stats.ideasCount}</span>
-                                        <span className="text-[10px] text-slate-500 uppercase">Ideias</span>
-                                    </div>
+
                                     <div className="bg-slate-900/50 border border-slate-800 p-3 rounded-lg flex flex-col items-center justify-center">
                                         <CheckSquare size={18} className="text-purple-400 mb-1" />
                                         <span className="text-white font-bold">{stats.tasksCount}</span>

@@ -5,7 +5,7 @@ import { useSubscription } from './hooks/useSubscription';
 import { AppProvider } from './contexts/AppContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
-import VideoIdeas from './pages/VideoIdeas';
+
 import Kanban from './pages/Kanban';
 import Finance from './pages/Finance';
 import Login from './pages/Login';
@@ -15,7 +15,7 @@ import Contracts from './pages/Contracts';
 import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Agenda from './pages/Agenda';
-import SharedIdea from './pages/SharedIdea';
+
 import ClientPortal from './pages/ClientPortal';
 import PublicBio from './pages/PublicBio';
 import BioSettings from './pages/BioSettings';
@@ -93,7 +93,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         {/* PUBLIC ROUTE - Must come FIRST and be EXACT */}
-        <Route path="/share/:token" element={<SharedIdea />} />
+
         <Route path="/portal/:token" element={<ClientPortal />} />
         <Route path="/bio/:username" element={<PublicBio />} />
         <Route path="/lp" element={<LandingPage />} />
@@ -130,17 +130,7 @@ const App: React.FC = () => {
           </AuthProvider>
         } />
 
-        <Route path="/ideias" element={
-          <AuthProvider>
-            <AppProvider>
-              <ProtectedRoute>
-                <Layout>
-                  <VideoIdeas />
-                </Layout>
-              </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+
 
         <Route path="/tarefas" element={
           <AuthProvider>

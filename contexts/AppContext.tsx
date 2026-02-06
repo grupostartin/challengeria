@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AppContextType, AppState, VideoIdea, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem, Appointment, BioConfig, FinancialOrganizer } from '../types';
+import { AppContextType, AppState, Task, Transaction, TaskStatus, Customer, Contract, InventoryItem, AppMode, Sale, SaleItem, Appointment, BioConfig, FinancialOrganizer } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -8,7 +8,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [state, setState] = useState<AppState>({
-    ideas: [],
+
     tasks: [],
     transactions: [],
     customers: [],
@@ -25,8 +25,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Fetch initial data
   const fetchData = async () => {
     if (!user) {
-      setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [] }));
-      setState(prev => ({ ...prev, ideas: [], tasks: [], transactions: [], customers: [], contracts: [], inventory: [], sales: [], appointments: [], financialOrganizers: [] }));
+      setState(prev => ({
+        ...prev,
+        tasks: [],
+        transactions: [],
+        customers: [],
+        contracts: [],
+        inventory: [],
+        sales: [],
+        appointments: [],
+        financialOrganizers: []
+      }));
       setLoading(false);
       return;
     }
@@ -35,7 +44,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     try {
       const results = await Promise.all([
-        supabase.from('video_ideas').select('*').order('criado_em', { ascending: false }),
         supabase.from('tasks').select('*').order('criada_em', { ascending: false }),
         supabase.from('transactions').select('*').order('data', { ascending: false }),
         supabase.from('customers').select('*').order('criado_em', { ascending: false }),
@@ -47,15 +55,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         supabase.from('financial_organizers').select('*').order('created_at', { ascending: false })
       ]);
 
-      const [ideasRes, tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes, appointmentsRes, bioRes, financialOrganizersRes] = results;
+      const [tasksRes, transactionsRes, customersRes, contractsRes, inventoryRes, salesRes, appointmentsRes, bioRes, financialOrganizersRes] = results;
 
       setState(prev => ({
         ...prev,
-        ideas: (ideasRes.data || []).map(i => ({
-          ...i,
-          criadoEm: new Date(i.criado_em).getTime(),
-          atualizadoEm: new Date(i.atualizado_em).getTime()
-        })),
         tasks: (tasksRes.data || []).map(t => ({
           ...t,
           criadaEm: new Date(t.criada_em).getTime(),
@@ -113,7 +116,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Set up real-time subscriptions
     const channels = [
-      supabase.channel('video_ideas_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'video_ideas', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('tasks_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('transactions_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` }, fetchData),
       supabase.channel('customers_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'customers', filter: `user_id=eq.${user.id}` }, fetchData),
@@ -132,109 +134,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, [user]);
 
-  // --- Ideas ---
-  const addIdea = async (idea: Omit<VideoIdea, 'id' | 'criadoEm' | 'atualizadoEm'>) => {
-    if (!user) return;
-    const { data, error } = await supabase.from('video_ideas').insert([{
-      user_id: user.id,
-      customer_id: idea.customer_id || null,
-      titulo: idea.titulo,
-      descricao: idea.descricao,
-      categoria: idea.categoria,
-      prioridade: idea.prioridade,
-      status: idea.status,
-      notas: idea.notas
-    }]).select();
 
-    if (data && !error) {
-      const newIdea = {
-        ...data[0],
-        criadoEm: new Date(data[0].criado_em).getTime(),
-        atualizadoEm: new Date(data[0].atualizado_em).getTime()
-      };
-      setState(prev => ({ ...prev, ideas: [newIdea, ...prev.ideas] }));
-    }
-  };
-
-  const updateIdea = async (id: string, updates: Partial<VideoIdea>) => {
-    if (!user) return;
-    const fields: any = {
-      titulo: updates.titulo,
-      descricao: updates.descricao,
-      categoria: updates.categoria,
-      prioridade: updates.prioridade,
-      status: updates.status,
-      notas: updates.notas,
-      atualizado_em: new Date().toISOString()
-    };
-    if (updates.customer_id !== undefined) fields.customer_id = updates.customer_id || null;
-
-    const { data, error } = await supabase.from('video_ideas').update(fields).eq('id', id).select();
-
-    if (data && !error) {
-      setState(prev => ({
-        ...prev,
-        ideas: prev.ideas.map(i => i.id === id ? {
-          ...i,
-          ...updates,
-          atualizadoEm: new Date(data[0].atualizado_em).getTime()
-        } : i)
-      }));
-    }
-  };
-
-  const deleteIdea = async (id: string) => {
-    if (!user) return;
-    const { error } = await supabase.from('video_ideas').delete().eq('id', id);
-    if (!error) {
-      setState(prev => ({ ...prev, ideas: prev.ideas.filter(i => i.id !== id) }));
-    }
-  };
-
-  const toggleIdeaShare = async (id: string): Promise<string | null> => {
-    if (!user) return null;
-
-    const idea = state.ideas.find(i => i.id === id);
-    if (!idea) return null;
-
-    // If already shared, disable sharing
-    if (idea.share_enabled) {
-      const { error } = await supabase.from('video_ideas').update({
-        share_enabled: false
-      }).eq('id', id);
-
-      if (!error) {
-        setState(prev => ({
-          ...prev,
-          ideas: prev.ideas.map(i => i.id === id ? { ...i, share_enabled: false } : i)
-        }));
-      }
-      return null;
-    }
-
-    // Generate new share token if needed
-    const shareToken = idea.share_token || `${id.substring(0, 8)}-${Date.now().toString(36)}`;
-
-    const { error } = await supabase.from('video_ideas').update({
-      share_token: shareToken,
-      share_enabled: true
-    }).eq('id', id);
-
-    if (!error) {
-      setState(prev => ({
-        ...prev,
-        ideas: prev.ideas.map(i => i.id === id ? {
-          ...i,
-          share_token: shareToken,
-          share_enabled: true
-        } : i)
-      }));
-
-      return `${window.location.origin}/#/share/${shareToken}`;
-    }
-
-    return null;
-  };
 
   // --- Tasks ---
   const addTask = async (task: Omit<Task, 'id' | 'criadaEm' | 'concluidaEm'>) => {
@@ -242,7 +142,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data, error } = await supabase.from('tasks').insert([{
       user_id: user.id,
       customer_id: task.customer_id || null,
-      idea_id: task.idea_id || null, // Link to Idea
       titulo: task.titulo,
       descricao: task.descricao,
       coluna: task.coluna,
@@ -269,35 +168,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }).eq('id', id).select();
 
     if (data && !error) {
-      const task = state.tasks.find(t => t.id === id);
-      const ideaId = task?.idea_id;
-
-      if (ideaId) {
-        let newIdeaStatus: any = 'pendente';
-        if (newStatus === 'inprogress') newIdeaStatus = 'processando';
-        if (newStatus === 'done') newIdeaStatus = 'concluido';
-
-        await supabase.from('video_ideas').update({ status: newIdeaStatus }).eq('id', ideaId);
-
-        setState(prev => ({
-          ...prev,
-          ideas: prev.ideas.map(i => i.id === ideaId ? { ...i, status: newIdeaStatus } : i),
-          tasks: prev.tasks.map(t => t.id === id ? {
-            ...t,
-            coluna: newStatus,
-            concluidaEm: data[0].concluida_em ? new Date(data[0].concluida_em).getTime() : null
-          } : t)
-        }));
-      } else {
-        setState(prev => ({
-          ...prev,
-          tasks: prev.tasks.map(t => t.id === id ? {
-            ...t,
-            coluna: newStatus,
-            concluidaEm: data[0].concluida_em ? new Date(data[0].concluida_em).getTime() : null
-          } : t)
-        }));
-      }
+      setState(prev => ({
+        ...prev,
+        tasks: prev.tasks.map(t => t.id === id ? {
+          ...t,
+          coluna: newStatus,
+          concluidaEm: data[0].concluida_em ? new Date(data[0].concluida_em).getTime() : null
+        } : t)
+      }));
     }
   };
 
@@ -309,50 +187,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const convertIdeaToTask = async (id: string) => {
-    if (!user) return;
-    const idea = state.ideas.find(i => i.id === id);
-    if (!idea) return;
 
-    // 1. Create the task
-    const { data: taskData, error: taskError } = await supabase.from('tasks').insert([{
-      user_id: user.id,
-      customer_id: idea.customer_id || null,
-      idea_id: idea.id, // Linking task to idea
-      titulo: idea.titulo,
-      descricao: idea.descricao,
-      coluna: 'todo',
-      tags: [idea.categoria],
-    }]).select();
-
-    if (taskError) return;
-
-    // 2. Update the idea status to 'pendente' (since it matches 'todo')
-    const { data: ideaData, error: ideaError } = await supabase.from('video_ideas').update({
-      status: 'pendente',
-      task_id: taskData[0].id, // Linking idea to task
-      atualizado_em: new Date().toISOString()
-    }).eq('id', id).select();
-
-    if (!ideaError && taskData && ideaData) {
-      const newTask = {
-        ...taskData[0],
-        criadaEm: new Date(taskData[0].criada_em).getTime(),
-        concluidaEm: null
-      };
-
-      setState(prev => ({
-        ...prev,
-        tasks: [newTask, ...prev.tasks],
-        ideas: prev.ideas.map(i => i.id === id ? {
-          ...i,
-          status: 'pendente',
-          task_id: taskData[0].id,
-          atualizadoEm: Date.now()
-        } : i)
-      }));
-    }
-  };
 
   // --- Transactions ---
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'criadaEm'>) => {
@@ -929,7 +764,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       category: organizer.category,
       type: organizer.type,
       due_day: organizer.due_day,
-      active: organizer.active
+      active: organizer.active,
+      frequency: organizer.frequency || 'monthly'
     }]).select();
 
     if (data && !error) {
@@ -955,6 +791,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.type !== undefined) fields.type = updates.type;
     if (updates.due_day !== undefined) fields.due_day = updates.due_day;
     if (updates.active !== undefined) fields.active = updates.active;
+    if (updates.frequency !== undefined) fields.frequency = updates.frequency;
 
     const { data, error } = await supabase.from('financial_organizers').update(fields).eq('id', id).select();
 
@@ -977,11 +814,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   return (
     <AppContext.Provider value={{
       ...state,
-      addIdea, updateIdea, deleteIdea,
       addTask, moveTask, deleteTask,
       addTransaction, updateTransaction, deleteTransaction,
-      convertIdeaToTask,
-      toggleIdeaShare,
       addCustomer, updateCustomer, deleteCustomer, togglePortalShare,
       addContract, updateContract, deleteContract,
       addInventoryItem, updateInventoryItem, deleteInventoryItem,

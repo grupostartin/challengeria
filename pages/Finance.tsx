@@ -10,22 +10,27 @@ import { supabase } from '../lib/supabase';
 const Finance: React.FC = () => {
   const { transactions, customers, contracts, financialOrganizers, addTransaction, updateTransaction, deleteTransaction, addFinancialOrganizer, updateFinancialOrganizer, deleteFinancialOrganizer } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialView = (searchParams.get('view') as 'transactions' | 'organizers') || 'transactions';
-  const [view, setView] = useState<'transactions' | 'organizers'>(initialView);
+  const initialView = (searchParams.get('view') as 'transactions' | 'recurrences') || 'transactions';
+  const [view, setView] = useState<'transactions' | 'recurrences'>(initialView);
 
   useEffect(() => {
     const paramView = searchParams.get('view');
-    if (paramView === 'organizers' || paramView === 'transactions') {
+    if (paramView === 'recurrences' || paramView === 'transactions') {
       setView(paramView);
     }
   }, [searchParams]);
   const [isOrganizerModalOpen, setIsOrganizerModalOpen] = useState(false);
   const [editingOrganizerId, setEditingOrganizerId] = useState<string | null>(null);
   const [organizerFormData, setOrganizerFormData] = useState<{
+    title: string;
+    amount: string;
+    category: string;
+    type: OrganizerType;
     due_day: string;
     active: boolean;
     total_installments: string;
     current_installment: string;
+    frequency: 'monthly' | 'weekly';
   }>({
     title: '',
     amount: '',
@@ -34,7 +39,8 @@ const Finance: React.FC = () => {
     due_day: '1',
     active: true,
     total_installments: '',
-    current_installment: ''
+    current_installment: '',
+    frequency: 'monthly'
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -234,7 +240,8 @@ const Finance: React.FC = () => {
       due_day: item.due_day.toString(),
       active: item.active,
       total_installments: item.total_installments?.toString() || '',
-      current_installment: item.current_installment?.toString() || ''
+      current_installment: item.current_installment?.toString() || '',
+      frequency: item.frequency || 'monthly'
     });
     setEditingOrganizerId(item.id);
     setIsOrganizerModalOpen(true);
@@ -249,7 +256,8 @@ const Finance: React.FC = () => {
       due_day: '1',
       active: true,
       total_installments: '',
-      current_installment: ''
+      current_installment: '',
+      frequency: 'monthly'
     });
     setEditingOrganizerId(null);
   };
@@ -289,10 +297,10 @@ const Finance: React.FC = () => {
             Transações
           </button>
           <button
-            onClick={() => setSearchParams({ view: 'organizers' })}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'organizers' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+            onClick={() => setSearchParams({ view: 'recurrences' })}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'recurrences' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
           >
-            Organizadores
+            Recorrências
           </button>
         </div>
 
@@ -309,7 +317,7 @@ const Finance: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] border ${view === 'transactions' ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-400/30' : 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_15px_rgba(8,145,178,0.4)] border-cyan-400/30'} text-white`}
         >
           <Plus size={18} />
-          <span className="font-medium">{view === 'transactions' ? 'Nova Transação' : 'Novo Organizador'}</span>
+          <span className="font-medium">{view === 'transactions' ? 'Nova Transação' : 'Nova Recorrência'}</span>
         </button>
       </div>
 
@@ -541,13 +549,13 @@ const Finance: React.FC = () => {
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {['conta_mensal', 'assinatura', 'outro'].map((type) => {
+            {['recebimento', 'conta_mensal', 'assinatura', 'outro'].map((type) => {
               const typeItems = financialOrganizers.filter(f => f.type === type);
               const totalAmount = typeItems.filter(i => i.active).reduce((sum, item) => sum + item.amount, 0);
 
-              const title = type === 'conta_mensal' ? 'Contas Mensais' : type === 'assinatura' ? 'Assinaturas' : 'Outros';
-              const icon = type === 'conta_mensal' ? <Receipt size={18} className="text-rose-400" /> : type === 'assinatura' ? <Repeat size={18} className="text-purple-400" /> : <DollarSign size={18} className="text-blue-400" />;
-              const colorClass = type === 'conta_mensal' ? 'rose' : type === 'assinatura' ? 'purple' : 'blue';
+              const title = type === 'recebimento' ? 'Recebimentos' : type === 'conta_mensal' ? 'Contas Mensais' : type === 'assinatura' ? 'Assinaturas' : 'Outros';
+              const icon = type === 'recebimento' ? <ArrowUpCircle size={18} className="text-emerald-400" /> : type === 'conta_mensal' ? <Receipt size={18} className="text-rose-400" /> : type === 'assinatura' ? <Repeat size={18} className="text-purple-400" /> : <DollarSign size={18} className="text-blue-400" />;
+              const colorClass = type === 'recebimento' ? 'emerald' : type === 'conta_mensal' ? 'rose' : type === 'assinatura' ? 'purple' : 'blue';
 
               return (
                 <div key={type} className="glass-panel p-5 rounded-xl border border-slate-700 space-y-4">
@@ -566,7 +574,13 @@ const Finance: React.FC = () => {
                             <div className="font-medium text-slate-200">{item.title}</div>
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-[10px] uppercase font-mono bg-slate-950 px-1.5 py-0.5 rounded text-slate-500">{item.category}</span>
-                              <span className="text-[10px] text-slate-400">Dia {item.due_day}</span>
+                              <span className="text-[10px] text-slate-400">
+                                {item.frequency === 'weekly' ? 'Semanal' : 'Mensal'}
+                                {' • '}
+                                {item.frequency === 'weekly'
+                                  ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][item.due_day - 1]
+                                  : `Dia ${item.due_day}`}
+                              </span>
                               {item.total_installments && (
                                 <span className="text-[10px] text-cyan-400 bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-800/30">
                                   Parcela {item.current_installment || '?'}/{item.total_installments}
@@ -583,7 +597,7 @@ const Finance: React.FC = () => {
                               <button onClick={() => handleEditOrganizer(item)} title="Editar" className="p-1 text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded">
                                 <Edit2 size={14} />
                               </button>
-                              <button onClick={() => { if (confirm('Excluir este organizador?')) deleteFinancialOrganizer(item.id); }} title="Excluir" className="p-1 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded">
+                              <button onClick={() => { if (confirm('Excluir esta recorrência?')) deleteFinancialOrganizer(item.id); }} title="Excluir" className="p-1 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded">
                                 <Trash2 size={14} />
                               </button>
                             </div>
@@ -603,18 +617,34 @@ const Finance: React.FC = () => {
       )}
 
       {/* Organizer Modal */}
-      <Modal isOpen={isOrganizerModalOpen} onClose={() => { setIsOrganizerModalOpen(false); resetOrganizerForm(); }} title={editingOrganizerId ? "Editar Organizador" : "Novo Organizador Financeiro"}>
+      <Modal isOpen={isOrganizerModalOpen} onClose={() => { setIsOrganizerModalOpen(false); resetOrganizerForm(); }} title={editingOrganizerId ? "Editar Recorrência" : "Nova Recorrência"}>
         <form onSubmit={handleOrganizerSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-mono text-cyan-500 mb-1 uppercase tracking-wider">Tipo</label>
             <div className="grid grid-cols-3 gap-2">
               {[
+                { id: 'recebimento', label: 'Recebimento', color: 'emerald' },
                 { id: 'conta_mensal', label: 'Conta Mensal', color: 'rose' },
                 { id: 'assinatura', label: 'Assinatura', color: 'purple' },
                 { id: 'outro', label: 'Outro', color: 'blue' }
               ].map(opt => (
-                <label key={opt.id} className={`cursor-pointer text-center py-2 rounded-lg border transition-all text-xs font-bold ${organizerFormData.type === opt.id ? `bg-${opt.color}-500/20 border-${opt.color}-500 text-${opt.color}-400` : 'bg-slate-950 border-slate-700 text-slate-500 hover:border-slate-500'}`}>
+                <label key={opt.id} className={`cursor-pointer text-center py-2 rounded-lg border transition-all text-[10px] font-bold ${organizerFormData.type === opt.id ? `bg-${opt.color}-500/20 border-${opt.color}-500 text-${opt.color}-400` : 'bg-slate-950 border-slate-700 text-slate-500 hover:border-slate-500'}`}>
                   <input type="radio" value={opt.id} checked={organizerFormData.type === opt.id} onChange={() => setOrganizerFormData({ ...organizerFormData, type: opt.id as any })} className="sr-only" />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono text-cyan-500 mb-1 uppercase tracking-wider">Frequência</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: 'monthly', label: 'Mensal' },
+                { id: 'weekly', label: 'Semanal' }
+              ].map(opt => (
+                <label key={opt.id} className={`cursor-pointer text-center py-2 rounded-lg border transition-all text-[10px] font-bold ${organizerFormData.frequency === opt.id ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-slate-950 border-slate-700 text-slate-500 hover:border-slate-500'}`}>
+                  <input type="radio" value={opt.id} checked={organizerFormData.frequency === opt.id} onChange={() => setOrganizerFormData({ ...organizerFormData, frequency: opt.id as any })} className="sr-only" />
                   {opt.label}
                 </label>
               ))}
@@ -632,8 +662,26 @@ const Finance: React.FC = () => {
               <input type="text" inputMode="decimal" required value={organizerFormData.amount} onChange={e => setOrganizerFormData({ ...organizerFormData, amount: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="0.00" />
             </div>
             <div>
-              <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">Dia de Vencimento</label>
-              <input type="number" min="1" max="31" required value={organizerFormData.due_day} onChange={e => setOrganizerFormData({ ...organizerFormData, due_day: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="1-31" />
+              <label className="block text-xs font-mono text-emerald-500 mb-1 uppercase tracking-wider">
+                {organizerFormData.frequency === 'weekly' ? 'Dia da Semana' : 'Dia de Vencimento'}
+              </label>
+              {organizerFormData.frequency === 'weekly' ? (
+                <select
+                  value={organizerFormData.due_day}
+                  onChange={e => setOrganizerFormData({ ...organizerFormData, due_day: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none"
+                >
+                  <option value="1">Segunda-feira</option>
+                  <option value="2">Terça-feira</option>
+                  <option value="3">Quarta-feira</option>
+                  <option value="4">Quinta-feira</option>
+                  <option value="5">Sexta-feira</option>
+                  <option value="6">Sábado</option>
+                  <option value="7">Domingo</option>
+                </select>
+              ) : (
+                <input type="number" min="1" max="31" required value={organizerFormData.due_day} onChange={e => setOrganizerFormData({ ...organizerFormData, due_day: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono outline-none" placeholder="1-31" />
+              )}
             </div>
           </div>
 

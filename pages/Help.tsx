@@ -38,7 +38,7 @@ const Help: React.FC = () => {
         { id: 'clientes', label: 'CRM e Portal Cliente', icon: Users },
         { id: 'financeiro', label: 'Gestão Financeira Pro', icon: DollarSign },
         { id: 'bio', label: 'Marketing e Link Bio', icon: LayoutIcon },
-        { id: 'conteudo', label: 'Estrutura de Conteúdo', icon: Lightbulb },
+        { id: 'tarefas', label: 'Gestão de Tarefas', icon: CheckSquare },
         { id: 'vendas', label: 'Estoque e PDV', icon: ShoppingCart },
     ];
 
@@ -189,20 +189,19 @@ const Help: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                 <div className="space-y-4">
                                     <h4 className="text-emerald-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                                        <PlusCircle size={16} /> Entradas Estratégicas
+                                        <PlusCircle size={16} /> Entradas e Recebimentos
                                     </h4>
                                     <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800 space-y-4">
                                         <div>
                                             <p className="text-white text-xs font-bold mb-1">Status: Pagamento Parcial</p>
                                             <p className="text-slate-500 text-[11px] leading-relaxed">
-                                                Ideal para fechamento de projetos com sinal. Exemplo: Projeto de R$ 2000, cliente pagou R$ 500 agora.
-                                                O sistema mostrará R$ 1500 na métrica de "A Receber" no seu dashboard, permitindo que você acompanhe a inadimplência em tempo real.
+                                                Ideal para fechamento de projetos com sinal. O sistema calcula automaticamente o saldo restante.
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-white text-xs font-bold mb-1">Comprovante Digital</p>
+                                            <p className="text-white text-xs font-bold mb-1">Recorrências de Recebimento</p>
                                             <p className="text-slate-500 text-[11px] leading-relaxed">
-                                                Tire uma foto do comprovante ou anexe o PDF. Isso elimina a necessidade de pastas físicas e facilita muito a conciliação bancária futura.
+                                                Cadastre recebimentos fixos (Mensais ou Semanais). O Dashboard projeta quanto você vai receber no mês, considerando quantas vezes aquele dia da semana ocorre.
                                             </p>
                                         </div>
                                     </div>
@@ -210,20 +209,20 @@ const Help: React.FC = () => {
 
                                 <div className="space-y-4">
                                     <h4 className="text-rose-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                                        <Clock size={16} /> Organizadores (Previsão)
+                                        <Clock size={16} /> Organizadores (Contas a Pagar)
                                     </h4>
                                     <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800 space-y-4">
                                         <p className="text-slate-400 text-xs leading-relaxed">
-                                            Não confunda Fluxo de Caixa com Custo de Operação. Cadastre nos **Organizadores** suas despesas fixas (Aluguel, Luz, Assinaturas). Eles servem como sentinelas:
+                                            Cadastre aluguel, luz, internet e outras despesas fixas na aba "Recorrências". Você pode definir se é uma conta **Mensal** (Dia X) ou **Semanal** (Toda Sexta-feira, por exemplo).
                                         </p>
                                         <ul className="space-y-2">
                                             <li className="text-[10px] text-slate-500 flex gap-2">
                                                 <div className="w-1 h-1 rounded-full bg-rose-500 mt-1.5 grow-0 shrink-0"></div>
-                                                Eles não descontam do seu saldo atual até que você clique em "Pagar".
+                                                O Dashboard alerta contas vencendo nos próximos 3 dias.
                                             </li>
                                             <li className="text-[10px] text-slate-500 flex gap-2">
                                                 <div className="w-1 h-1 rounded-full bg-rose-500 mt-1.5 grow-0 shrink-0"></div>
-                                                O Dashboard te avisará visualmente quando estiverem a 3 dias do vencimento.
+                                                Contas ativas aparecem na previsão de gastos do mês automaticamente.
                                             </li>
                                         </ul>
                                     </div>
@@ -237,19 +236,19 @@ const Help: React.FC = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div className="space-y-1">
                                         <p className="text-[9px] text-slate-600 font-mono">SALDO REAL PAGO</p>
-                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">Soma de tudo que já entrou menos tudo que já foi pago de fato.</p>
+                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">O que realmente entrou menos o que saiu.</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[9px] text-amber-600 font-mono">A RECEBER PENDENTE</p>
-                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">Contratos ativos e parcelas que ainda não foram marcadas como pagas.</p>
+                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">Contratos ativos não pagos + Vendas pendentes.</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[9px] text-rose-600 font-mono">DESPESAS PREVISTAS</p>
-                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">Total dos seus Organizadores Financeiros para o mês corrente.</p>
+                                        <p className="text-[9px] text-rose-600 font-mono">PREVISÃO DE GASTOS</p>
+                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">Soma inteligente de todas as suas contas fixas (mensais e semanais).</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[9px] text-purple-600 font-mono">SALDO PROJETADO</p>
-                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">A estimativa de como seu caixa estará se todos pagarem e você pagar tudo.</p>
+                                        <p className="text-slate-300 text-[10px] leading-tight font-medium">Estimativa final do seu caixa se tudo for pago e recebido.</p>
                                     </div>
                                 </div>
                             </div>
@@ -297,31 +296,31 @@ const Help: React.FC = () => {
                         </section>
                     </div>
                 );
-            case 'conteudo':
+            case 'tarefas':
                 return (
                     <div className="space-y-8 animate-fade-in">
                         <section className="glass-panel p-8 rounded-3xl border border-slate-800">
                             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                                <Lightbulb className="text-amber-400" /> Fluxo de Trabalho de Conteúdo
+                                <CheckSquare className="text-amber-400" /> Gestão de Tarefas
                             </h2>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="p-8 bg-slate-900/30 rounded-3xl border border-slate-800 space-y-4">
                                     <h3 className="text-white font-bold flex items-center gap-2">
-                                        <Lightbulb className="text-amber-500" /> 1. Ideias e Insigths
+                                        <CheckSquare className="text-amber-500" /> Kanban ou Lista
                                     </h3>
                                     <p className="text-xs text-slate-400 leading-relaxed">
-                                        A aba "Ideias" é seu estoque bruto. Nunca deixe uma ideia esfriar. Registre-a imediatamente, defina a prioridade e, se necessário, compartilhe o link da ideia com parceiros. O sistema gera uma página pública limpa apenas com os detalhes daquela ideia específica.
+                                        Organize seu fluxo de trabalho visualmente. Crie tarefas para tudo: desde "Comprar material de escritório" até "Finalizar edição do vídeo do cliente X".
+                                        Use a visualização de Kanban para arrastar tarefas entre "A Fazer", "Em Progresso" e "Concluído".
                                     </p>
                                 </div>
 
                                 <div className="p-8 bg-slate-900/30 rounded-3xl border border-slate-800 space-y-4">
                                     <h3 className="text-white font-bold flex items-center gap-2">
-                                        <CheckSquare className="text-cyan-500" /> 2. O Kanban Mágico
+                                        <Lightbulb className="text-cyan-500" /> Tags e Prioridades
                                     </h3>
                                     <p className="text-xs text-slate-400 leading-relaxed">
-                                        Quando uma ideia for aprovada para produção, clique em "Converter em Tarefa".
-                                        **O que acontece?** Ela desaparece da lista de ideias e surge no seu Kanban. Arraste-a conforme você progride. Quando você move para "Concluído", o sistema entende que o ciclo editorial terminou.
+                                        Use tags para categorizar suas tarefas (ex: #Urgente, #Financeiro, #Pessoal). Isso ajuda a filtrar visualmente o que é mais importante no seu dia a dia.
                                     </p>
                                 </div>
                             </div>

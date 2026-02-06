@@ -1,9 +1,9 @@
 export type Priority = 'alta' | 'media' | 'baixa';
-export type IdeaStatus = 'pendente' | 'processando' | 'concluido' | 'arquivado';
+
 export type TaskStatus = 'todo' | 'inprogress' | 'done';
 export type TransactionType = 'receita' | 'despesa';
 export type AppMode = 'user' | 'store';
-export type OrganizerType = 'conta_mensal' | 'assinatura' | 'outro';
+export type OrganizerType = 'conta_mensal' | 'assinatura' | 'recebimento' | 'outro';
 
 export interface InventoryItem {
   id: string;
@@ -26,26 +26,12 @@ export interface Customer {
   criadoEm: number;
 }
 
-export interface VideoIdea {
-  id: string;
-  customer_id?: string;
-  task_id?: string; // Link to Kanban Task
-  titulo: string;
-  descricao: string;
-  categoria: string;
-  prioridade: Priority;
-  status: IdeaStatus;
-  notas: string;
-  share_token?: string; // Token for public sharing
-  share_enabled?: boolean; // Whether sharing is enabled
-  criadoEm: number; // Timestamp
-  atualizadoEm: number; // Timestamp
-}
+
 
 export interface Task {
   id: string;
   customer_id?: string;
-  idea_id?: string; // Link to Video Idea
+
   titulo: string;
   descricao: string;
   coluna: TaskStatus;
@@ -124,6 +110,7 @@ export interface FinancialOrganizer {
   active: boolean;
   total_installments?: number;
   current_installment?: number;
+  frequency?: 'monthly' | 'weekly';
   created_at: number;
 }
 
@@ -162,7 +149,7 @@ export interface UserProfile {
 }
 
 export interface AppState {
-  ideas: VideoIdea[];
+
   tasks: Task[];
   transactions: Transaction[];
   customers: Customer[];
@@ -176,10 +163,6 @@ export interface AppState {
 }
 
 export interface AppContextType extends AppState {
-  addIdea: (idea: Omit<VideoIdea, 'id' | 'criadoEm' | 'atualizadoEm'>) => void;
-  updateIdea: (id: string, idea: Partial<VideoIdea>) => void;
-  deleteIdea: (id: string) => void;
-
   addTask: (task: Omit<Task, 'id' | 'criadaEm' | 'concluidaEm'>) => void;
   moveTask: (id: string, newStatus: TaskStatus) => void;
   deleteTask: (id: string) => void;
@@ -188,8 +171,7 @@ export interface AppContextType extends AppState {
   updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => void;
 
-  convertIdeaToTask: (id: string) => Promise<void>;
-  toggleIdeaShare: (id: string) => Promise<string | null>; // Returns share URL or null
+
 
   addCustomer: (customer: Omit<Customer, 'id' | 'criadoEm'>) => Promise<void>;
   updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;

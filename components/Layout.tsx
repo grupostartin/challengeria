@@ -106,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/agenda', label: 'Agenda', icon: Calendar },
-    { path: '/ideias', label: 'Ideias de Vídeo', icon: Lightbulb },
+
     { path: '/tarefas', label: appMode === 'store' ? 'Tarefas' : 'Kanban Tarefas', icon: CheckSquare },
     ...(appMode === 'store' ? [
       { path: '/estoque', label: 'Estoque', icon: Package },
