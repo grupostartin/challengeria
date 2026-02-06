@@ -246,9 +246,10 @@ const PublicBio: React.FC = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 0.2 }}
                             transition={{ delay: 2.5 }}
-                            className="mt-8 mb-12 text-[10px] uppercase tracking-[3px] font-bold"
+                            className="mt-8 mb-12 flex flex-col items-center gap-2"
                         >
-                            Startin Clients © 2026
+                            <img src="/logo.png" alt="UPStartin" className="h-4 w-auto grayscale" />
+                            <span className="text-[8px] uppercase tracking-[3px] font-bold">© 2026</span>
                         </motion.footer>
                     </div>
                 </motion.div>

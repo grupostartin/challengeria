@@ -53,7 +53,7 @@ const Help: React.FC = () => {
                                     <Zap size={28} />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Arquitetura do Startin Clients</h2>
+                                    <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Arquitetura do UPStartin</h2>
                                     <p className="text-slate-500 text-sm">Entenda como cada engrenagem se move no sistema.</p>
                                 </div>
                             </div>
@@ -86,7 +86,7 @@ const Help: React.FC = () => {
                                     </div>
                                     <h3 className="text-white font-bold mb-2">Instalação Mobile (PWA)</h3>
                                     <p className="text-slate-500 text-xs leading-relaxed mb-4">
-                                        O Startin Clients é uma *Progressive Web App*. Não precisa baixar da App Store.
+                                        O UPStartin é uma *Progressive Web App*. Não precisa baixar da App Store.
                                     </p>
                                     <ul className="space-y-2">
                                         <li className="text-[11px] text-slate-400 flex gap-2">
@@ -375,8 +375,8 @@ const Help: React.FC = () => {
                         <div className="flex items-center gap-2 mb-4">
                             <span className="bg-cyan-500/10 text-cyan-400 text-[10px] font-bold px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-widest">Suporte & Documentação</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2">
-                            Manual de Operação <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">Startin 1.0</span>
+                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2 flex items-center gap-4">
+                            Manual de Operação <img src="/logo.png" alt="UPStartin" className="h-10 md:h-12 w-auto" />
                         </h1>
                         <p className="text-slate-400 text-lg max-w-xl leading-snug">
                             Guia operacional detalhado para dominar cada ferramenta do seu ecossistema de gestão.
@@ -416,7 +416,7 @@ const Help: React.FC = () => {
                             Não encontrou o que precisava? Nossa equipe técnica está pronta para ajudar via WhatsApp.
                         </p>
                         <button className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">
-                            Falar com Suporte Startin
+                            Falar com Suporte UPStartin
                         </button>
                     </div>
                 </div>

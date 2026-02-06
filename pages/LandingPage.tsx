@@ -32,11 +32,8 @@ const Navbar = () => {
     return (
         <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#020617]/80 backdrop-blur-md border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
             <div className="container mx-auto px-6 flex items-center justify-between">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-                    <div className="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                        <Layout className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-xl font-bold text-white tracking-tight">Startin</span>
+                <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+                    <img src="/logo.png" alt="UPStartin" className="h-12 w-auto" />
                 </div>
 
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
@@ -273,7 +270,7 @@ const LandingPage = () => {
                                         <div className="w-3 h-3 rounded-full bg-red-500/50" />
                                         <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
                                         <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                                        <div className="ml-4 px-3 py-1 bg-[#020617] rounded-md text-[10px] text-slate-500 font-mono w-64 text-center">startin.app/dashboard</div>
+                                        <div className="ml-4 px-3 py-1 bg-[#020617] rounded-md text-[10px] text-slate-500 font-mono w-64 text-center">upstartin.app/dashboard</div>
                                     </div>
                                     <img
                                         src="/assets/dashboard-preview.png"
@@ -294,7 +291,7 @@ const LandingPage = () => {
                                 Do <span className="line-through text-slate-500 decoration-red-500 decoration-4">caos</span> à <span className="text-cyan-400">clareza</span>
                             </h2>
                             <p className="text-slate-400 max-w-2xl mx-auto">
-                                Pare de pagar por 5 ferramentas diferentes. O Startin centraliza tudo o que sua agência precisa para operar no piloto automático.
+                                Pare de pagar por 5 ferramentas diferentes. O UPStartin centraliza tudo o que sua agência precisa para operar no piloto automático.
                             </p>
                         </div>
 
@@ -325,13 +322,13 @@ const LandingPage = () => {
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 blur-[80px] rounded-full group-hover:bg-cyan-500/20 transition-all" />
                                 <div className="flex items-center gap-3 mb-4 text-cyan-400">
                                     <CheckCircle2 className="w-6 h-6" />
-                                    <h3 className="text-xl font-bold">O Método Startin</h3>
+                                    <h3 className="text-xl font-bold">O Método UPStartin</h3>
                                 </div>
                                 <p className="text-slate-400 mb-6">Interface unificada, fluxo de trabalho linear. Tudo conectado em um ecossistema inteligente.</p>
                                 <div className="relative rounded-lg overflow-hidden border border-cyan-500/20 h-48 w-full">
                                     <img
                                         src="/assets/kanban-preview.png"
-                                        alt="Startin Kanban"
+                                        alt="UPStartin Kanban"
                                         className="w-full h-full object-cover object-top opacity-80 hover:opacity-100 transition-opacity"
                                     />
                                 </div>
@@ -393,7 +390,7 @@ const LandingPage = () => {
                                 </h2>
                                 <p className="text-slate-400 text-lg mb-8 leading-relaxed max-w-xl">
                                     Não espere chegar no escritório para fechar um negócio.
-                                    Com o app mobile do Startin, você envia propostas, checa o fluxo de caixa
+                                    Com o app mobile do UPStartin, você envia propostas, checa o fluxo de caixa
                                     e responde clientes de qualquer lugar.
                                 </p>
                                 <ul className="space-y-4 mb-8">
@@ -419,7 +416,7 @@ const LandingPage = () => {
                                 <div className="relative z-10 w-[300px] border-8 border-[#1e293b] rounded-[3rem] shadow-2xl overflow-hidden bg-[#020617]">
                                     <img
                                         src="/assets/finance-mobile.png"
-                                        alt="Startin Mobile App"
+                                        alt="UPStartin Mobile App"
                                         className="w-full h-auto"
                                     />
                                 </div>
@@ -487,7 +484,7 @@ const LandingPage = () => {
                             />
                             <FaqItem
                                 question="Vocês processam pagamentos e faturas?"
-                                answer="O Startin se integra com gateways de pagamento como Stripe e Mercado Pago para facilitar suas cobranças automáticas e emissão de notas."
+                                answer="O UPStartin se integra com gateways de pagamento como Stripe e Mercado Pago para facilitar suas cobranças automáticas e emissão de notas."
                             />
                             <FaqItem
                                 question="Posso adicionar membros ao meu projeto?"
@@ -514,7 +511,7 @@ const LandingPage = () => {
                                 Pronto para escalar seu negócio?
                             </h2>
                             <p className="text-slate-400 text-xl mb-10 max-w-2xl mx-auto">
-                                Junte-se a 10,000+ criadores que gerenciam seus clientes melhor com o Startin.
+                                Junte-se a 10,000+ criadores que gerenciam seus clientes melhor com o UPStartin.
                                 Economize tempo, receba mais rápido e foque na sua arte.
                             </p>
                             <button
@@ -534,14 +531,11 @@ const LandingPage = () => {
                 <div className="container mx-auto px-6">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-center md:justify-start gap-2">
-                                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
-                                    <Layout className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="font-bold text-white text-lg">Startin</span>
+                            <div className="flex items-center justify-center md:justify-start">
+                                <img src="/logo.png" alt="UPStartin" className="h-12 w-auto" />
                             </div>
                             <p className="text-slate-500">
-                                © 2026 Startin. Todos os direitos reservados.
+                                © 2026 UPStartin. Todos os direitos reservados.
                             </p>
                         </div>
 

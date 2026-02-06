@@ -41,8 +41,8 @@ const PlanExpired: React.FC = () => {
                 </div>
 
                 <h1 className="text-2xl font-bold text-white mb-2">Seu período de teste acabou</h1>
-                <p className="text-slate-400 mb-8">
-                    Para continuar usando o Startin e acessar todos os recursos, faça o upgrade para o plano Premium.
+                <p className="text-slate-400 mb-8 flex items-center justify-center flex-wrap gap-1">
+                    Para continuar usando o <img src="/logo.png" alt="UPStartin" className="h-4 w-auto inline-block" /> e acessar todos os recursos, faça o upgrade para o plano Premium.
                 </p>
 
                 <div className="space-y-4">

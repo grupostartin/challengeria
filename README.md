@@ -1,4 +1,4 @@
-# 🚀 Startin Clients | Ecosystem for Content Creators & Digital Business
+# 🚀 UPStartin | Ecosystem for Content Creators & Digital Business
 
 ![Banner Challengeria](https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6)
 
@@ -7,7 +7,7 @@
 ---
 
 ### 1. Visão Geral do Produto
-**Startin Clients** é uma plataforma "tudo-em-um" desenhada para criadores de conteúdo, agências e profissionais liberais que buscam centralizar sua operação. O projeto combina ferramentas de CRM, Gestão de Projetos (Conteúdo), Financeiro e Marketing (Link-in-Bio) em uma única interface moderna e responsiva.
+**UPStartin** é uma plataforma "tudo-em-um" desenhada para criadores de conteúdo, agências e profissionais liberais que buscam centralizar sua operação. O projeto combina ferramentas de CRM, Gestão de Projetos (Conteúdo), Financeiro e Marketing (Link-in-Bio) em uma única interface moderna e responsiva.
 
 ---
 
@@ -20,10 +20,8 @@
 
 ### 3. Módulos e Funcionalidades Core
 
-#### 📁 Gestão de Conteúdo & Criatividade
-- **Banco de Ideias (Video Ideas)**: Registro e curadoria de ideias para vídeos e conteúdos sociais.
+#### 📁 Gestão de Projetos & Criatividade
 - **Workflow Kanban**: Gestão visual do status de produção (Ideia, Roteiro, Gravação, Edição, Postado).
-- **Shared Ideas**: Sistema de compartilhamento de insights específicos via tokens seguros.
 
 #### 👥 CRM & Relacionamento
 - **Gestão de Clientes**: Banco de dados centralizado com histórico e contatos.
@@ -37,7 +35,7 @@
 - **Agenda**: Calendário integrado para sessões, reuniões e deadlines.
 
 #### 🔗 Marketing & Presença Digital
-- **Link-in-Bio (Challengeria Bio)**: Página pública personalizada para centralizar links e converter visitantes em leads (Bio Settings).
+- **Link-in-Bio (UPStartin Bio)**: Página pública personalizada para centralizar links e converter visitantes em leads (Bio Settings).
 - **Lead Capture**: Integração direta entre a página de bio e o CRM.
 
 ---
@@ -47,7 +45,6 @@
 | Rota | Descrição | Status de Acesso |
 | :--- | :--- | :--- |
 | `/` | Dashboard Principal | 🔐 Protegido |
-| `/ideias` | Gestão de Ideias de Vídeo | 🔐 Protegido |
 | `/tarefas` | Quadro Kanban de Produção | 🔐 Protegido |
 | `/financeiro` | Gestão de Fluxo de Caixa | 🔐 Protegido |
 | `/clientes` | Lista e Detalhes de Clientes | 🔐 Protegido |
@@ -58,7 +55,6 @@
 | `/config-bio` | Editor da Landing Page de Bio | 🔐 Protegido |
 | `/bio/:username`| Landing Page Pública | 🌐 Público |
 | `/portal/:token`| Portal de Acesso do Cliente | 🌐 Público (via Token) |
-| `/share/:token` | Ideia Compartilhada | 🌐 Público (via Token) |
 
 ---
 

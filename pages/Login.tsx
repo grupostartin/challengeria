@@ -32,8 +32,8 @@ const Login: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <div className="login-header">
-          <h1>Startin Clients</h1>
+        <div className="login-header text-center">
+          <img src="/logo.png" alt="UPStartin" className="h-16 mx-auto mb-6" />
           <p>Entre na sua conta</p>
         </div>
 

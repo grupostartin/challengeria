@@ -1,6 +1,6 @@
 {
-    "name": "Startin Clients",
-    "short_name": "Startin Clients",
+    "name": "UPStartin",
+    "short_name": "UPStartin",
     "description": "Personal Organizer with AI",
     "start_url": "/",
     "display": "standalone",

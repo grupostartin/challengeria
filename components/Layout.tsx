@@ -127,12 +127,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-64 glass-panel border-r border-slate-800/50 z-20">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-cyan-500/10 border border-cyan-500/50 rounded-lg flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-            <Cpu className="text-cyan-400" size={20} />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">
-            Startin Clients
-          </span>
+          <img src="/logo.png" alt="UPStartin" className="h-12 w-auto" />
         </div>
 
         <div className="px-4 mb-4">
@@ -206,9 +201,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         <header className="md:hidden glass-panel border-b border-slate-800/50 text-white p-4 flex items-center justify-between shadow-lg z-20 relative">
-          <div className="flex items-center gap-2">
-            <Cpu className="text-cyan-400" size={20} />
-            <span className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Startin Clients</span>
+          <div className="flex items-center">
+            <img src="/logo.png" alt="UPStartin" className="h-12 w-auto" />
           </div>
           {swUpdateAvailable ? (
             <button

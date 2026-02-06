@@ -28,9 +28,9 @@ const ClientPortal: React.FC = () => {
 
     useEffect(() => {
         if (customer) {
-            document.title = `${customer.nome} | Portal do Cliente | Startin Clients`;
+            document.title = `${customer.nome} | Portal do Cliente | UPStartin`;
         } else {
-            document.title = `Portal do Cliente | Startin Clients`;
+            document.title = `Portal do Cliente | UPStartin`;
         }
     }, [customer]);
 
@@ -317,7 +317,7 @@ const ClientPortal: React.FC = () => {
             {/* Footer */}
             <footer className="fixed bottom-0 left-0 w-full z-20 glass-panel border-t border-slate-800/50 py-3.5 px-6 flex items-center justify-center bg-slate-950/90">
                 <p className="text-[9px] md:text-[10px] text-slate-500 font-mono uppercase tracking-[0.2em] text-center">
-                    SISTEMA POR <span className="text-white font-bold">PEDRO AUGUSTO | Grupo Startin</span> <span className="hidden xs:inline">| Startin Clients</span>
+                    SISTEMA POR <span className="text-white font-bold">PEDRO AUGUSTO | Grupo Startin</span> <img src="/logo.png" alt="UPStartin" className="h-3 w-auto inline-block ml-2 opacity-50 grayscale hover:grayscale-0 transition-all" />
                 </p>
             </footer>
 

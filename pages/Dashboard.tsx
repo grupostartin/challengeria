@@ -15,14 +15,14 @@ const Dashboard: React.FC = () => {
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
 
   React.useEffect(() => {
-    const hasSeenUpdate = localStorage.getItem('startin_clients_update_v1');
+    const hasSeenUpdate = localStorage.getItem('upstartin_update_v1');
     if (!hasSeenUpdate) {
       setShowUpdateModal(true);
     }
   }, []);
 
   const handleCloseModal = () => {
-    localStorage.setItem('startin_clients_update_v1', 'true');
+    localStorage.setItem('upstartin_update_v1', 'true');
     setShowUpdateModal(false);
   };
 
@@ -189,9 +189,11 @@ const Dashboard: React.FC = () => {
             <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
               <Activity size={40} className="text-white animate-pulse" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Novo Startin Clients!</h2>
+            <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+              Conheça o <img src="/logo.png" alt="UPStartin" className="h-10 w-auto" />
+            </h2>
             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-              O ChallengerIA agora é <span className="text-cyan-400 font-bold">Startin Clients</span>.
+              O ChallengerIA agora é <img src="/logo.png" alt="UPStartin" className="h-4 w-auto inline-block mx-1" />.
               Atualizamos o ícone e a marca para uma experiência ainda mais premium.
               <br /><br />
               <span className="text-xs font-mono text-slate-500 uppercase">Por favor, atualize ou reinstale seu Web App para ver as novas mudanças.</span>

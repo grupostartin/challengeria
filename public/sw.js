@@ -1,4 +1,4 @@
-const CACHE_NAME = 'startin-clients-v5';
+const CACHE_NAME = 'upstartin-v1';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
