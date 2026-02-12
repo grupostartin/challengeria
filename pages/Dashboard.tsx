@@ -112,8 +112,29 @@ const Dashboard: React.FC = () => {
     .filter(f => f.active && f.type === 'recebimento')
     .reduce((acc, curr) => acc + getFullMonthImpact(curr), 0);
 
+  // Track which recurrences have been paid this month
+  const paidRecurrenceIds = transactions
+    .filter(t => {
+      if (!t.recurrence_id) return false;
+      const tDate = new Date(t.data);
+      return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+    })
+    .map(t => t.recurrence_id);
+
+  const overdueBills = financialOrganizers
+    .filter(f => f.active && f.type !== 'recebimento' && !paidRecurrenceIds.includes(f.id))
+    .filter(f => {
+      if (f.frequency === 'weekly') return false; // For now, focus on monthly for overdue
+      return f.due_day < currentDay;
+    })
+    .map(f => ({
+      ...f,
+      isOverdue: true,
+      displayDay: `Dia ${f.due_day}`
+    }));
+
   const upcomingBills = financialOrganizers
-    .filter(f => f.active && f.type !== 'recebimento')
+    .filter(f => f.active && f.type !== 'recebimento' && !paidRecurrenceIds.includes(f.id))
     .flatMap(f => {
       const matches = targetDays.filter(td => f.frequency === 'weekly' ? td.dayOfWeek === f.due_day : td.dayOfMonth === f.due_day);
       return matches.map(td => ({
@@ -129,7 +150,7 @@ const Dashboard: React.FC = () => {
     .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime());
 
   const upcomingIncome = financialOrganizers
-    .filter(f => f.active && f.type === 'recebimento')
+    .filter(f => f.active && f.type === 'recebimento' && !paidRecurrenceIds.includes(f.id))
     .flatMap(f => {
       const matches = targetDays.filter(td => f.frequency === 'weekly' ? td.dayOfWeek === f.due_day : td.dayOfMonth === f.due_day);
       return matches.map(td => ({
@@ -216,7 +237,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {upcomingBills.length > 0 && (
+      {(upcomingBills.length > 0 || overdueBills.length > 0) && (
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="relative overflow-hidden group glass-panel bg-gradient-to-r from-rose-950/40 via-slate-900/40 to-slate-900/40 border-rose-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(244,63,94,0.1)]">
             <div className="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
@@ -227,13 +248,22 @@ const Dashboard: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-bold text-white flex items-center gap-2">
-                  Atenção: {upcomingBills.length} {upcomingBills.length === 1 ? 'conta vincendo' : 'contas vencendo'} em breve!
+                  {overdueBills.length > 0 ? (
+                    <>Atenção: {overdueBills.length} {overdueBills.length === 1 ? 'conta atrasada' : 'contas atrasadas'}!</>
+                  ) : (
+                    <>Atenção: {upcomingBills.length} {upcomingBills.length === 1 ? 'conta vincendo' : 'contas vencendo'} em breve!</>
+                  )}
                   <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-ping"></span>
                 </h4>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  Total imediato: <span className="text-rose-400 font-bold font-mono">R$ {upcomingBills.reduce((acc, b) => acc + b.amount, 0).toFixed(2)}</span>
+                  Total imediato: <span className="text-rose-400 font-bold font-mono">R$ {(upcomingBills.reduce((acc, b) => acc + b.amount, 0) + overdueBills.reduce((acc, b) => acc + b.amount, 0)).toFixed(2)}</span>
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
+                  {overdueBills.map((bill, idx) => (
+                    <span key={`overdue-${bill.id}-${idx}`} className="text-[10px] items-center flex gap-1 font-mono px-2 py-1 rounded border bg-rose-600/20 border-rose-500 text-rose-400 font-bold">
+                      {bill.title} (ATRASADO)
+                    </span>
+                  ))}
                   {upcomingBills.slice(0, 3).map((bill, idx) => (
                     <span key={`${bill.id}-${idx}`} className={`text-[10px] items-center flex gap-1 font-mono px-2 py-1 rounded border ${bill.isToday ? 'bg-rose-500/20 border-rose-500 text-rose-400 ring-1 ring-rose-500/30' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
                       {bill.title} ({bill.displayDay})

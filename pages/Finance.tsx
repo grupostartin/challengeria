@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 import { TransactionType, Transaction, FinancialOrganizer, OrganizerType } from '../types';
 import Modal from '../components/Modal';
-import { Plus, ArrowUpCircle, ArrowDownCircle, Trash2, Edit2, Filter, DollarSign, Calendar, AlertCircle, CheckCircle, FileUp, Paperclip, ExternalLink, Loader2, Repeat, CreditCard, Receipt } from 'lucide-react';
+import { Plus, ArrowUpCircle, ArrowDownCircle, Trash2, Edit2, Filter, DollarSign, Calendar, AlertCircle, CheckCircle, FileUp, Paperclip, ExternalLink, Loader2, Repeat, CreditCard, Receipt, FileText, Download, Printer } from 'lucide-react';
 import { getBrasiliaDate, formatDisplayDate } from '../lib/dateUtils';
 import { supabase } from '../lib/supabase';
 
@@ -48,6 +48,9 @@ const Finance: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'receita' | 'despesa'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setBy] = useState<'date_desc' | 'date_asc' | 'value_desc' | 'value_asc'>('date_desc');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [isUploading, setIsUploading] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -78,6 +81,55 @@ const Finance: React.FC = () => {
     attachment_url: '',
     file: null as File | null
   });
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const filteredTransactions = transactions
+    .filter(t => {
+      const matchesType = filterType === 'all' || t.tipo === filterType;
+      const tDesc = t.descricao.toLowerCase();
+      const tCat = t.categoria.toLowerCase();
+      const search = searchTerm.toLowerCase();
+      const matchesSearch = tDesc.includes(search) || tCat.includes(search);
+
+      let matchesDate = true;
+      if (dateRange.start) matchesDate = matchesDate && t.data >= dateRange.start;
+      if (dateRange.end) matchesDate = matchesDate && t.data <= dateRange.end;
+
+      return matchesType && matchesSearch && matchesDate;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'date_asc':
+          return new Date(a.data).getTime() - new Date(b.data).getTime();
+        case 'value_desc':
+          return b.valor - a.valor;
+        case 'value_asc':
+          return a.valor - b.valor;
+        case 'date_desc':
+        default:
+          return new Date(b.data).getTime() - new Date(a.data).getTime();
+      }
+    });
+
+  const paidRecurrenceIds = transactions
+    .filter(t => {
+      if (!t.recurrence_id) return false;
+      const tDate = new Date(t.data);
+      return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+    })
+    .map(t => t.recurrence_id);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pendente': return <span className="flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30 font-mono"><AlertCircle size={10} /> PENDENTE</span>;
+      case 'atrasado': return <span className="flex items-center gap-1 text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded border border-rose-500/30 font-mono animate-pulse"><AlertCircle size={10} /> ATRASADO</span>;
+      case 'parcial': return <span className="flex items-center gap-1 text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/30 font-mono"><AlertCircle size={10} /> PARCIAL</span>;
+      default: return <span className="flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-mono"><CheckCircle size={10} /> PAGO</span>;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,21 +314,57 @@ const Finance: React.FC = () => {
     setEditingOrganizerId(null);
   };
 
-  const filteredTransactions = transactions
-    .filter(t => filterType === 'all' || t.tipo === filterType)
-    .sort((a, b) => {
-      const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
-      const dateB = b.data.includes('T') ? b.data : `${b.data}T12:00:00`;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
-    });
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pendente': return <span className="flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30 font-mono"><AlertCircle size={10} /> PENDENTE</span>;
-      case 'atrasado': return <span className="flex items-center gap-1 text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded border border-rose-500/30 font-mono animate-pulse"><AlertCircle size={10} /> ATRASADO</span>;
-      case 'parcial': return <span className="flex items-center gap-1 text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/30 font-mono"><AlertCircle size={10} /> PARCIAL</span>;
-      default: return <span className="flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-mono"><CheckCircle size={10} /> PAGO</span>;
+  const handleMarkAsPaid = async (item: FinancialOrganizer) => {
+    try {
+      await addTransaction({
+        tipo: item.type === 'recebimento' ? 'receita' : 'despesa',
+        valor: item.amount,
+        categoria: item.category,
+        descricao: item.title,
+        data: getBrasiliaDate(),
+        statusPagamento: 'pago',
+        recurrence_id: item.id,
+        valor_pago: item.amount
+      });
+      setSearchParams({ view: 'transactions' });
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao marcar como pago.');
     }
+  };
+
+  const handleExportCSV = () => {
+    if (filteredTransactions.length === 0) return;
+
+    const headers = ['Data', 'Descricao', 'Tipo', 'Categoria', 'Valor', 'Status', 'Cliente'];
+    const rows = filteredTransactions.map(t => [
+      formatDisplayDate(t.data),
+      t.descricao,
+      t.tipo === 'receita' ? 'Entrada' : 'Saída',
+      t.categoria,
+      t.valor.toFixed(2),
+      t.statusPagamento,
+      customers.find(c => c.id === t.customer_id)?.nome || ''
+    ]);
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(row => row.join(';'))
+    ].join('\n');
+
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `financeiro_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -323,19 +411,93 @@ const Finance: React.FC = () => {
 
       {view === 'transactions' ? (
         <div className="glass-panel rounded-xl overflow-hidden border border-slate-700">
-          <div className="p-4 border-b border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-900/50 gap-4 sm:gap-0">
-            <h3 className="font-semibold text-slate-200">Log de Transações Profissional</h3>
-            <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 w-full sm:w-auto">
-              <Filter size={14} className="text-slate-400" />
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
-                className="text-xs bg-transparent border-none text-slate-300 focus:ring-0 cursor-pointer outline-none w-full sm:w-auto"
-              >
-                <option value="all">TODOS OS DADOS</option>
-                <option value="receita">ENTRADAS</option>
-                <option value="despesa">SAÍDAS</option>
-              </select>
+          <div className="p-4 border-b border-slate-700 space-y-4 bg-slate-900/50">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <h3 className="font-semibold text-slate-200">Log de Transações Profissional</h3>
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                {/* Search */}
+                <div className="flex-1 md:flex-none relative">
+                  <input
+                    type="text"
+                    placeholder="Pesquisar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full md:w-48 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-600 outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+
+                {/* Filter Type */}
+                <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5">
+                  <Filter size={14} className="text-slate-400" />
+                  <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value as any)}
+                    className="text-xs bg-transparent border-none text-slate-300 focus:ring-0 cursor-pointer outline-none"
+                  >
+                    <option value="all">TODOS</option>
+                    <option value="receita">ENTRADAS</option>
+                    <option value="despesa">SAÍDAS</option>
+                  </select>
+                </div>
+
+                {/* Sort */}
+                <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setBy(e.target.value as any)}
+                    className="text-xs bg-transparent border-none text-slate-300 focus:ring-0 cursor-pointer outline-none"
+                  >
+                    <option value="date_desc">MAIS RECENTES</option>
+                    <option value="date_asc">MAIS ANTIGOS</option>
+                    <option value="value_desc">MAIOR VALOR</option>
+                    <option value="value_asc">MENOR VALOR</option>
+                  </select>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={handleExportCSV}
+                      title="Exportar CSV (Planilha)"
+                      className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all border border-slate-700"
+                    >
+                      <Download size={14} />
+                    </button>
+                    <button
+                      onClick={handlePrint}
+                      title="Imprimir / Salvar PDF"
+                      className="p-1.5 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-all border border-slate-700"
+                    >
+                      <Printer size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Date Filters */}
+            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-800/50">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Período:</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[10px] text-slate-400 outline-none focus:border-emerald-500/30"
+                />
+                <span className="text-slate-700">até</span>
+                <input
+                  type="date"
+                  value={dateRange.end}
+                  onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[10px] text-slate-400 outline-none focus:border-emerald-500/30"
+                />
+                {(dateRange.start || dateRange.end) && (
+                  <button
+                    onClick={() => setDateRange({ start: '', end: '' })}
+                    className="text-[9px] text-rose-500 hover:text-rose-400 font-bold uppercase transition-colors"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -453,99 +615,103 @@ const Finance: React.FC = () => {
 
           {/* Mobile View (Cards) */}
           <div className="md:hidden flex flex-col divide-y divide-slate-800">
-            {filteredTransactions.map((t) => (
-              <div key={t.id} className="p-4 flex flex-col gap-3 hover:bg-slate-800/30 transition-colors">
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-bold text-slate-200 text-sm uppercase tracking-tight line-clamp-2">
-                      {t.descricao.startsWith('VENDA_ID:')
-                        ? `Venda #${t.descricao.split(':')[1].substring(0, 8)}`
-                        : t.descricao}
-                    </span>
-                    {t.customer_id && (
-                      <span className="text-[10px] text-cyan-400 font-mono bg-cyan-950/30 self-start px-1.5 rounded border border-cyan-800/30">
-                        {customers.find(c => c.id === t.customer_id)?.nome || 'Cliente'}
-                      </span>
-                    )}
-                  </div>
-                  <div className={`font-bold font-mono tracking-wide text-sm ${t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    {t.statusPagamento === 'parcial' && t.valor_pago != null && (
-                      <div className="text-[10px] text-blue-400 text-right uppercase font-normal">
-                        Pago: R$ {t.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-end">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      {t.statusPagamento && getStatusBadge(t.statusPagamento)}
-                    </div>
+            {
+              filteredTransactions.map((t) => (
+                <div key={t.id} className="p-4 flex flex-col gap-3 hover:bg-slate-800/30 transition-colors">
+                  <div className="flex justify-between items-start">
                     <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 text-slate-400 text-xs font-mono">
-                        <CheckCircle size={10} className="text-emerald-500" /> {formatDisplayDate(t.data)}
-                      </div>
-                      {t.dataVencimento && (
-                        <div className="flex items-center gap-1.5 text-rose-400 text-xs font-mono">
-                          <Calendar size={10} /> {formatDisplayDate(t.dataVencimento)}
+                      <span className="font-bold text-slate-200 text-sm uppercase tracking-tight line-clamp-2">
+                        {t.descricao.startsWith('VENDA_ID:')
+                          ? `Venda #${t.descricao.split(':')[1].substring(0, 8)}`
+                          : t.descricao}
+                      </span>
+                      {t.customer_id && (
+                        <span className="text-[10px] text-cyan-400 font-mono bg-cyan-950/30 self-start px-1.5 rounded border border-cyan-800/30">
+                          {customers.find(c => c.id === t.customer_id)?.nome || 'Cliente'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={`font-bold font-mono tracking-wide text-sm ${t.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      {t.statusPagamento === 'parcial' && t.valor_pago != null && (
+                        <div className="text-[10px] text-blue-400 text-right uppercase font-normal">
+                          Pago: R$ {t.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-slate-950 border border-slate-700 px-2 py-1 rounded text-[10px] font-mono text-slate-400">{t.categoria}</span>
-                      {t.attachment_url ? (
-                        <a
-                          href={t.attachment_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 text-emerald-400 bg-emerald-950/30 border border-emerald-800/30 rounded-md transition-all"
+                  <div className="flex justify-between items-end">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        {t.statusPagamento && getStatusBadge(t.statusPagamento)}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 text-slate-400 text-xs font-mono">
+                          <CheckCircle size={10} className="text-emerald-500" /> {formatDisplayDate(t.data)}
+                        </div>
+                        {t.dataVencimento && (
+                          <div className="flex items-center gap-1.5 text-rose-400 text-xs font-mono">
+                            <Calendar size={10} /> {formatDisplayDate(t.dataVencimento)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-slate-950 border border-slate-700 px-2 py-1 rounded text-[10px] font-mono text-slate-400">{t.categoria}</span>
+                        {t.attachment_url ? (
+                          <a
+                            href={t.attachment_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-emerald-400 bg-emerald-950/30 border border-emerald-800/30 rounded-md transition-all"
+                          >
+                            <Paperclip size={14} />
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setSelectedTxId(t.id);
+                              setIsProofModalOpen(true);
+                            }}
+                            className="p-1.5 text-cyan-400 bg-cyan-950/30 border border-cyan-800/30 rounded-md transition-all"
+                          >
+                            <FileUp size={14} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1 border border-slate-700/50">
+                        <button
+                          onClick={() => handleEdit(t)}
+                          className="p-1.5 text-slate-600 hover:text-cyan-500 hover:bg-cyan-500/10 rounded-md transition-all"
                         >
-                          <Paperclip size={14} />
-                        </a>
-                      ) : (
+                          <Edit2 size={14} />
+                        </button>
                         <button
                           onClick={() => {
-                            setSelectedTxId(t.id);
-                            setIsProofModalOpen(true);
+                            if (window.confirm('Tem certeza que deseja excluir esta transação?')) {
+                              deleteTransaction(t.id);
+                            }
                           }}
-                          className="p-1.5 text-cyan-400 bg-cyan-950/30 border border-cyan-800/30 rounded-md transition-all"
+                          className="p-1.5 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-all"
                         >
-                          <FileUp size={14} />
+                          <Trash2 size={14} />
                         </button>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1 border border-slate-700/50">
-                      <button
-                        onClick={() => handleEdit(t)}
-                        className="p-1.5 text-slate-600 hover:text-cyan-500 hover:bg-cyan-500/10 rounded-md transition-all"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('Tem certeza que deseja excluir esta transação?')) {
-                            deleteTransaction(t.id);
-                          }
-                        }}
-                        className="p-1.5 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-all"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {filteredTransactions.length === 0 && (
-              <div className="p-8 text-center text-slate-500 text-sm">Nenhuma transação encontrada.</div>
-            )}
-          </div>
-        </div>
+              ))
+            }
+            {
+              filteredTransactions.length === 0 && (
+                <div className="p-8 text-center text-slate-500 text-sm">Nenhuma transação encontrada.</div>
+              )
+            }
+          </div >
+        </div >
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -586,6 +752,11 @@ const Finance: React.FC = () => {
                                   Parcela {item.current_installment || '?'}/{item.total_installments}
                                 </span>
                               )}
+                              {paidRecurrenceIds.includes(item.id) && (
+                                <span className="text-[10px] text-emerald-400 bg-emerald-950/30 px-1.5 py-0.5 rounded border border-emerald-800/30 font-bold">
+                                  PAGO ESTE MÊS
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
@@ -594,6 +765,16 @@ const Finance: React.FC = () => {
                               <button onClick={() => updateFinancialOrganizer(item.id, { active: !item.active })} title={item.active ? "Desativar" : "Ativar"} className={`p-1 rounded ${item.active ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-slate-600 hover:text-emerald-500'}`}>
                                 <CheckCircle size={14} />
                               </button>
+                              {item.active && (
+                                <button
+                                  onClick={() => handleMarkAsPaid(item)}
+                                  title="Marcar como Pago"
+                                  className="p-1 text-emerald-500 hover:bg-emerald-500/10 rounded flex items-center gap-1"
+                                >
+                                  <DollarSign size={14} />
+                                  <span className="text-[10px] font-bold">PAGO</span>
+                                </button>
+                              )}
                               <button onClick={() => handleEditOrganizer(item)} title="Editar" className="p-1 text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded">
                                 <Edit2 size={14} />
                               </button>
@@ -852,52 +1033,54 @@ const Finance: React.FC = () => {
         </form>
       </Modal>
 
-      {isProofModalOpen && (
-        <Modal isOpen={isProofModalOpen} onClose={() => { setIsProofModalOpen(false); setProofFile(null); }} title="Anexar Comprovante de Pagamento">
-          <form onSubmit={handleQuickProofUpload} className="space-y-6">
-            <div>
-              <label className="block text-xs font-mono text-cyan-500 mb-2 uppercase tracking-wider">Arquivo (PDF ou Imagem)</label>
-              <div className="relative group">
-                <input
-                  type="file"
-                  ref={quickProofInputRef}
-                  accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
-                  required
-                  onChange={e => setProofFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-                <div
-                  onClick={() => quickProofInputRef.current?.click()}
-                  className="w-full px-4 py-10 bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg text-slate-400 group-hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer active:scale-[0.98]"
-                >
-                  <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-400">
-                    <FileUp size={32} />
+      {
+        isProofModalOpen && (
+          <Modal isOpen={isProofModalOpen} onClose={() => { setIsProofModalOpen(false); setProofFile(null); }} title="Anexar Comprovante de Pagamento">
+            <form onSubmit={handleQuickProofUpload} className="space-y-6">
+              <div>
+                <label className="block text-xs font-mono text-cyan-500 mb-2 uppercase tracking-wider">Arquivo (PDF ou Imagem)</label>
+                <div className="relative group">
+                  <input
+                    type="file"
+                    ref={quickProofInputRef}
+                    accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
+                    required
+                    onChange={e => setProofFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                  <div
+                    onClick={() => quickProofInputRef.current?.click()}
+                    className="w-full px-4 py-10 bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg text-slate-400 group-hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center gap-3 cursor-pointer active:scale-[0.98]"
+                  >
+                    <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-400">
+                      <FileUp size={32} />
+                    </div>
+                    <span className="text-sm font-medium text-center px-4">
+                      {proofFile ? proofFile.name : "Toque para selecionar o arquivo"}
+                    </span>
+                    <button type="button" className="text-xs bg-slate-800 text-slate-200 px-4 py-2 rounded-full border border-slate-700">Procurar Documento</button>
+                    <p className="text-[10px] text-slate-400 mt-2 text-center">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                   </div>
-                  <span className="text-sm font-medium text-center px-4">
-                    {proofFile ? proofFile.name : "Toque para selecionar o arquivo"}
-                  </span>
-                  <button type="button" className="text-xs bg-slate-800 text-slate-200 px-4 py-2 rounded-full border border-slate-700">Procurar Documento</button>
-                  <p className="text-[10px] text-slate-400 mt-2 text-center">Dica: No Android, escolha a opção "Arquivos" para PDFs.</p>
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-end pt-4 border-t border-slate-800 gap-3">
-              <button type="button" onClick={() => { setIsProofModalOpen(false); setProofFile(null); }} disabled={isUploading} className="px-4 py-2 text-slate-400 hover:text-white font-mono uppercase text-xs">Cancelar</button>
-              <button type="submit" disabled={isUploading} className="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 shadow-lg font-bold flex items-center gap-2">
-                {isUploading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    ENVIANDO...
-                  </>
-                ) : (
-                  "CONFIRMAR ANEXO"
-                )}
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
+              <div className="flex justify-end pt-4 border-t border-slate-800 gap-3">
+                <button type="button" onClick={() => { setIsProofModalOpen(false); setProofFile(null); }} disabled={isUploading} className="px-4 py-2 text-slate-400 hover:text-white font-mono uppercase text-xs">Cancelar</button>
+                <button type="submit" disabled={isUploading} className="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 shadow-lg font-bold flex items-center gap-2">
+                  {isUploading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      ENVIANDO...
+                    </>
+                  ) : (
+                    "CONFIRMAR ANEXO"
+                  )}
+                </button>
+              </div>
+            </form>
+          </Modal>
+        )
+      }
     </div>
   );
 };

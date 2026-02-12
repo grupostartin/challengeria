@@ -55,6 +55,7 @@ export interface Transaction {
   attachment_url?: string;
   valor_pago?: number;
   contract_id?: string;
+  recurrence_id?: string;
 }
 
 export interface Contract {

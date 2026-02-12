@@ -69,6 +69,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           dataVencimento: tx.data_vencimento,
           statusPagamento: tx.status_pagamento,
           contract_id: tx.contract_id,
+          recurrence_id: tx.recurrence_id,
           criadaEm: new Date(tx.criada_em).getTime()
         })).sort((a, b) => {
           const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
@@ -204,7 +205,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       status_pagamento: transaction.statusPagamento || 'pago',
       attachment_url: transaction.attachment_url || null,
       valor_pago: transaction.valor_pago || 0,
-      contract_id: transaction.contract_id || null
+      contract_id: transaction.contract_id || null,
+      recurrence_id: transaction.recurrence_id || null
     }]).select();
 
     if (error) {
@@ -230,6 +232,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         dataVencimento: data[0].data_vencimento,
         statusPagamento: data[0].status_pagamento,
         contract_id: data[0].contract_id,
+        recurrence_id: data[0].recurrence_id,
         valor_pago: data[0].valor_pago,
         criadaEm: new Date(data[0].criada_em).getTime()
       };
@@ -268,6 +271,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.contract_id !== undefined) fields.contract_id = updates.contract_id || null;
     if (updates.customer_id !== undefined) fields.customer_id = updates.customer_id || null;
     if (updates.dataVencimento !== undefined) fields.data_vencimento = updates.dataVencimento || null;
+    if (updates.recurrence_id !== undefined) fields.recurrence_id = updates.recurrence_id || null;
 
     const { data, error } = await supabase.from('transactions').update(fields).eq('id', id).select();
 
@@ -300,7 +304,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           statusPagamento: data[0].status_pagamento,
           valor_pago: data[0].valor_pago,
           contract_id: data[0].contract_id,
-          customer_id: data[0].customer_id
+          customer_id: data[0].customer_id,
+          recurrence_id: data[0].recurrence_id
         } : t).sort((a, b) => {
           const dateA = a.data.includes('T') ? a.data : `${a.data}T12:00:00`;
           const dateB = b.data.includes('T') ? b.data : `${b.data}T12:00:00`;
