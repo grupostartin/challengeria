@@ -14,59 +14,54 @@ const PublicBio: React.FC = () => {
     useEffect(() => {
         const fetchBio = async () => {
             if (!username) return;
-            const { data, error } = await supabase
+
+            // Step 1: Fetch the bio config by username
+            const { data: bioData, error: bioError } = await supabase
                 .from('bio_configs')
-                .select(`
-                    *,
-                    owner:profiles!user_id (
-                        subscription_status,
-                        trial_ends_at,
-                        current_period_end,
-                        plan_type
-                    )
-                `)
+                .select('*')
                 .eq('username', username.toLowerCase())
                 .single();
 
-            if (error) {
-                console.error('[PublicBio] Supabase error:', error);
+            if (bioError || !bioData) {
+                console.error('[PublicBio] Bio not found:', bioError);
                 setLoading(false);
                 return;
             }
 
-            if (data) {
-                // Check owner subscription
-                const owner = data.owner as any;
+            // Step 2: Fetch the profile separately to check subscription
+            // (bio_configs.user_id has FK to auth.users, not profiles, so we can't join)
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('subscription_status, trial_ends_at, current_period_end, plan_type')
+                .eq('id', bioData.user_id)
+                .single();
 
-                // If owner data is missing (e.g. RLS issue), still show the bio
-                // to avoid false 404s. The bio itself is publicly readable.
-                if (!owner) {
-                    console.warn('[PublicBio] Owner data not returned - showing bio without subscription check.');
-                    setConfig(data);
-                    setTimeout(() => setShowSplash(false), 2500);
-                    setLoading(false);
-                    return;
-                }
-
-                const now = new Date();
-                const trialEnds = owner.trial_ends_at ? new Date(owner.trial_ends_at) : null;
-
-                const isPremium = owner.plan_type === 'premium' && owner.subscription_status === 'active';
-                const isTrial = owner.plan_type === 'trial' || owner.subscription_status === 'trialing';
-                const isTrialExpired = trialEnds ? trialEnds < now : false;
-
-                const hasAccess = isPremium || (isTrial && !isTrialExpired);
-
-                if (!hasAccess) {
-                    setConfig(null);
-                    setLoading(false);
-                    return;
-                }
-
-                setConfig(data);
-                // Inicia countdown para tirar o splash
+            // If profile data is missing for any reason, still show the bio
+            if (!profileData) {
+                console.warn('[PublicBio] Profile not found - showing bio without subscription check.');
+                setConfig(bioData);
                 setTimeout(() => setShowSplash(false), 2500);
+                setLoading(false);
+                return;
             }
+
+            const now = new Date();
+            const trialEnds = profileData.trial_ends_at ? new Date(profileData.trial_ends_at) : null;
+
+            const isPremium = profileData.plan_type === 'premium' && profileData.subscription_status === 'active';
+            const isTrial = profileData.plan_type === 'trial' || profileData.subscription_status === 'trialing';
+            const isTrialExpired = trialEnds ? trialEnds < now : false;
+
+            const hasAccess = isPremium || (isTrial && !isTrialExpired);
+
+            if (!hasAccess) {
+                setConfig(null);
+                setLoading(false);
+                return;
+            }
+
+            setConfig(bioData);
+            setTimeout(() => setShowSplash(false), 2500);
             setLoading(false);
         };
 
