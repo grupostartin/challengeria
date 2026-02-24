@@ -28,12 +28,28 @@ const PublicBio: React.FC = () => {
                 .eq('username', username.toLowerCase())
                 .single();
 
-            if (data && !error) {
+            if (error) {
+                console.error('[PublicBio] Supabase error:', error);
+                setLoading(false);
+                return;
+            }
+
+            if (data) {
                 // Check owner subscription
                 const owner = data.owner as any;
+
+                // If owner data is missing (e.g. RLS issue), still show the bio
+                // to avoid false 404s. The bio itself is publicly readable.
+                if (!owner) {
+                    console.warn('[PublicBio] Owner data not returned - showing bio without subscription check.');
+                    setConfig(data);
+                    setTimeout(() => setShowSplash(false), 2500);
+                    setLoading(false);
+                    return;
+                }
+
                 const now = new Date();
                 const trialEnds = owner.trial_ends_at ? new Date(owner.trial_ends_at) : null;
-                const periodEnd = owner.current_period_end ? new Date(owner.current_period_end) : null;
 
                 const isPremium = owner.plan_type === 'premium' && owner.subscription_status === 'active';
                 const isTrial = owner.plan_type === 'trial' || owner.subscription_status === 'trialing';
