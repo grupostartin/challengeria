@@ -48,6 +48,7 @@ const Finance: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'receita' | 'despesa'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pendente' | 'pago' | 'atrasado' | 'parcial' | 'nao_pago'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setBy] = useState<'date_desc' | 'date_asc' | 'value_desc' | 'value_asc'>('date_desc');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -89,6 +90,12 @@ const Finance: React.FC = () => {
   const filteredTransactions = transactions
     .filter(t => {
       const matchesType = filterType === 'all' || t.tipo === filterType;
+
+      let matchesStatus = filterStatus === 'all' || t.statusPagamento === filterStatus;
+      if (filterStatus === 'nao_pago') {
+        matchesStatus = t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado' || t.statusPagamento === 'parcial';
+      }
+
       const tDesc = t.descricao.toLowerCase();
       const tCat = t.categoria.toLowerCase();
       const search = searchTerm.toLowerCase();
@@ -98,7 +105,7 @@ const Finance: React.FC = () => {
       if (dateRange.start) matchesDate = matchesDate && t.data >= dateRange.start;
       if (dateRange.end) matchesDate = matchesDate && t.data <= dateRange.end;
 
-      return matchesType && matchesSearch && matchesDate;
+      return matchesType && matchesStatus && matchesSearch && matchesDate;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -434,9 +441,26 @@ const Finance: React.FC = () => {
                     onChange={(e) => setFilterType(e.target.value as any)}
                     className="text-xs bg-transparent border-none text-slate-300 focus:ring-0 cursor-pointer outline-none"
                   >
-                    <option value="all">TODOS</option>
+                    <option value="all">TODOS TIPOS</option>
                     <option value="receita">ENTRADAS</option>
                     <option value="despesa">SAÍDAS</option>
+                  </select>
+                </div>
+
+                {/* Filter Status */}
+                <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5">
+                  <CheckCircle size={14} className="text-slate-400" />
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value as any)}
+                    className="text-xs bg-transparent border-none text-slate-300 focus:ring-0 cursor-pointer outline-none"
+                  >
+                    <option value="all">TODOS STATUS</option>
+                    <option value="pago">PAGO</option>
+                    <option value="nao_pago">NÃO PAGO</option>
+                    <option value="pendente">PENDENTE</option>
+                    <option value="atrasado">ATRASADO</option>
+                    <option value="parcial">PARCIAL</option>
                   </select>
                 </div>
 

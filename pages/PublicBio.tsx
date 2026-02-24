@@ -21,10 +21,11 @@ const PublicBio: React.FC = () => {
                     owner:profiles!user_id (
                         subscription_status,
                         trial_ends_at,
-                        current_period_end
+                        current_period_end,
+                        plan_type
                     )
                 `)
-                .eq('username', username)
+                .eq('username', username.toLowerCase())
                 .single();
 
             if (data && !error) {
@@ -34,10 +35,13 @@ const PublicBio: React.FC = () => {
                 const trialEnds = owner.trial_ends_at ? new Date(owner.trial_ends_at) : null;
                 const periodEnd = owner.current_period_end ? new Date(owner.current_period_end) : null;
 
-                const isPremiumActive = owner.plan_type === 'premium' && owner.subscription_status === 'active';
-                const isTrialActive = (owner.plan_type === 'trial' || owner.subscription_status === 'trialing') && trialEnds && trialEnds > now;
+                const isPremium = owner.plan_type === 'premium' && owner.subscription_status === 'active';
+                const isTrial = owner.plan_type === 'trial' || owner.subscription_status === 'trialing';
+                const isTrialExpired = trialEnds ? trialEnds < now : false;
 
-                if (!isPremiumActive && !isTrialActive) {
+                const hasAccess = isPremium || (isTrial && !isTrialExpired);
+
+                if (!hasAccess) {
                     setConfig(null);
                     setLoading(false);
                     return;
