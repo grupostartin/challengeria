@@ -52,6 +52,10 @@ const Dashboard: React.FC = () => {
       return acc;
     }, 0);
 
+  // Recebimentos pendentes/atrasados de transações normais (não recorrências)
+  const pendingReceivables = transactions
+    .filter(t => t.tipo === 'receita' && (t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado' || t.statusPagamento === 'parcial'));
+
   const expense = transactions
     .filter(t => t.tipo === 'despesa')
     .reduce((acc, curr) => {
@@ -286,6 +290,55 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Alerta de Recebimentos Pendentes (transações normais) */}
+      {pendingReceivables.length > 0 && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="relative overflow-hidden group glass-panel bg-gradient-to-r from-amber-950/40 via-slate-900/40 to-slate-900/40 border-amber-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+            <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-inner">
+                <TrendingUp size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-white flex items-center gap-2">
+                  {pendingReceivables.length} {pendingReceivables.length === 1 ? 'recebimento pendente' : 'recebimentos pendentes'}
+                  <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>
+                </h4>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Total pendente: <span className="text-amber-400 font-bold font-mono">R$ {pendingReceivables.reduce((acc, t) => {
+                    if (t.statusPagamento === 'parcial') return acc + (t.valor - (t.valor_pago || 0));
+                    return acc + t.valor;
+                  }, 0).toFixed(2)}</span>
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {pendingReceivables.slice(0, 3).map((t, idx) => (
+                    <span key={`recv-${t.id}-${idx}`} className={`text-[10px] items-center flex gap-1 font-mono px-2 py-1 rounded border ${t.statusPagamento === 'atrasado'
+                        ? 'bg-rose-600/20 border-rose-500 text-rose-400 font-bold'
+                        : t.statusPagamento === 'parcial'
+                          ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                          : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                      }`}>
+                      {t.descricao.startsWith('VENDA_ID:') ? `Venda #${t.descricao.split(':')[1].substring(0, 8)}` : t.descricao}
+                      <span className="ml-1 opacity-70">({t.statusPagamento === 'atrasado' ? 'ATRASADO' : t.statusPagamento === 'parcial' ? 'PARCIAL' : 'PENDENTE'})</span>
+                    </span>
+                  ))}
+                  {pendingReceivables.length > 3 && <span className="text-[10px] text-slate-500 self-center">...e mais {pendingReceivables.length - 3}</span>}
+                </div>
+              </div>
+            </div>
+
+            <Link
+              to="/financeiro"
+              className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-lg border border-amber-500/20 transition-all font-medium text-sm group-hover:border-amber-500/50 whitespace-nowrap"
+            >
+              Ver Financeiro
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      )}
+
       {upcomingIncome.length > 0 && (
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="relative overflow-hidden group glass-panel bg-gradient-to-r from-emerald-950/40 via-slate-900/40 to-slate-900/40 border-emerald-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
@@ -319,7 +372,7 @@ const Dashboard: React.FC = () => {
               to="/financeiro?view=recurrences"
               className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/20 transition-all font-medium text-sm group-hover:border-emerald-500/50"
             >
-              Ver Recebimentos
+              Ver Recorrências
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
