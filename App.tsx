@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useSubscription } from './hooks/useSubscription';
 import { AppProvider } from './contexts/AppContext';
@@ -39,7 +39,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     if (sessionId && user) {
       setVerifying(true);
       // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [user]);
 

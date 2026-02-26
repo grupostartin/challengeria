@@ -428,7 +428,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         customers: prev.customers.map(c => c.id === id ? { ...c, portal_token: portalToken } : c)
       }));
 
-      return `${window.location.origin}/#/portal/${portalToken}`;
+      return `${window.location.origin}/portal/${portalToken}`;
     }
 
     return null;

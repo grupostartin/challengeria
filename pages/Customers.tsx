@@ -129,7 +129,7 @@ const Customers: React.FC = () => {
                                         {customer.portal_token && (
                                             <button
                                                 onClick={() => {
-                                                    const url = `${window.location.origin}/#/portal/${customer.portal_token}`;
+                                                    const url = `${window.location.origin}/portal/${customer.portal_token}`;
                                                     copyToClipboard(url);
                                                     setCopyingId(customer.id);
                                                     setTimeout(() => setCopyingId(null), 2000);
@@ -254,7 +254,7 @@ const Customers: React.FC = () => {
                     </div>
                 </form>
             </Modal>
-        </div>
+        </div >
     );
 };
 

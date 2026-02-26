@@ -1,6 +1,7 @@
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useNavigate } from "react-router-dom"
 import { Menu, X, Camera } from "lucide-react"
 
 export interface FloatingMenuItem {
@@ -17,6 +18,7 @@ interface FloatingMenuProps {
 
 export function FloatingMenu({ items, className }: FloatingMenuProps) {
     const [isOpen, setIsOpen] = React.useState(false)
+    const navigate = useNavigate()
 
     return (
         <div className={cn("relative flex flex-col items-center", className)}>
@@ -43,7 +45,7 @@ export function FloatingMenu({ items, className }: FloatingMenuProps) {
                                 <button
                                     onClick={() => {
                                         setIsOpen(false)
-                                        window.location.hash = '#/anexo-rapido'
+                                        navigate('/anexo-rapido')
                                     }}
                                     className="col-span-3 mb-2 flex items-center justify-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold shadow-lg active:scale-95"
                                 >

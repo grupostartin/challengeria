@@ -93,7 +93,7 @@ const BioSettings: React.FC = () => {
     };
 
     const copyUrl = () => {
-        const url = `${window.location.origin}/#/bio/${formData.username}`;
+        const url = `${window.location.origin}/bio/${formData.username}`;
         navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -554,7 +554,7 @@ const BioSettings: React.FC = () => {
 
                         <div className="mt-6 flex justify-center">
                             <a
-                                href={`${window.location.origin}/#/bio/${formData.username}`}
+                                href={`${window.location.origin}/bio/${formData.username}`}
                                 target="_blank"
                                 className="text-cyan-400 hover:text-cyan-300 text-sm font-medium flex items-center gap-1 group"
                             >
