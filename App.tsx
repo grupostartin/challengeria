@@ -24,6 +24,7 @@ import LandingPage from './pages/LandingPage';
 import PlanExpired from './pages/PlanExpired';
 import Subscription from './pages/Subscription';
 import QuickAttachment from './pages/QuickAttachment';
+import Notes from './pages/Notes';
 
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -246,6 +247,18 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <Layout>
                   <QuickAttachment />
+                </Layout>
+              </ProtectedRoute>
+            </AppProvider>
+          </AuthProvider>
+        } />
+
+        <Route path="/anotacoes" element={
+          <AuthProvider>
+            <AppProvider>
+              <ProtectedRoute>
+                <Layout>
+                  <Notes />
                 </Layout>
               </ProtectedRoute>
             </AppProvider>

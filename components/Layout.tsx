@@ -21,7 +21,8 @@ import {
   Layout as LayoutIcon,
   HelpCircle,
   CreditCard,
-  Camera
+  Camera,
+  StickyNote
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -34,7 +35,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { appMode, setAppMode } = useApp();
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
   const [swUpdateAvailable, setSwUpdateAvailable] = React.useState(false);
@@ -118,6 +119,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/config-bio', label: 'Página Bio', icon: LayoutIcon },
     { path: '/assinatura', label: 'Minha Assinatura', icon: CreditCard },
     { path: '/anexo-rapido', label: 'Câmera Rápida', icon: Camera, mobileOnly: true },
+    ...(user?.email === 'pedroaugusto9876@gmail.com' ? [{ path: '/anotacoes', label: 'Minhas Anotações', icon: StickyNote }] : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;

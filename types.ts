@@ -138,6 +138,15 @@ export interface BioConfig {
   updated_at: string;
 }
 
+export interface UserNote {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
