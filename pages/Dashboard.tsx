@@ -3,7 +3,7 @@ import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Lightbulb, CheckCircle2, Wallet, TrendingUp, Activity, Package, Clock, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
 import { formatDisplayDate, getBrasiliaDate, getDayOfMonth, isWeekend, getCurrentMonthName } from '../lib/dateUtils';
-import { AlertCircle, CreditCard, ExternalLink, ArrowUpCircle } from 'lucide-react';
+import { AlertCircle, CreditCard, ExternalLink, ArrowUpCircle, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
@@ -92,6 +92,25 @@ const Dashboard: React.FC = () => {
     }, 0);
 
   const balance = income - expense;
+  
+  // Total Balance Calculation (Overall history)
+  const totalIncome = transactions
+    .reduce((acc, curr) => {
+      if (curr.tipo !== 'receita') return acc;
+      if (curr.statusPagamento === 'pago' || !curr.statusPagamento) return acc + curr.valor;
+      if (curr.statusPagamento === 'parcial') return acc + (curr.valor_pago || 0);
+      return acc;
+    }, 0);
+
+  const totalExpense = transactions
+    .reduce((acc, curr) => {
+      if (curr.tipo !== 'despesa') return acc;
+      if (curr.statusPagamento === 'pago' || !curr.statusPagamento) return acc + curr.valor;
+      if (curr.statusPagamento === 'parcial') return acc + (curr.valor_pago || 0);
+      return acc;
+    }, 0);
+
+  const totalBalance = totalIncome - totalExpense;
 
   // Organizer Calculations
   const currentDay = getDayOfMonth();
@@ -431,7 +450,22 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="glass-panel p-6 rounded-xl border-cyan-500/10 hover:border-cyan-500/30 transition-all group overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-cyan-500/10 transition-all"></div>
+          <div className="flex items-start justify-between relative z-10">
+            <div>
+              <p className="text-sm font-medium text-slate-400 mb-1">Saldo Geral em Caixa</p>
+              <h3 className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-white' : 'text-rose-500'}`}>
+                R$ {totalBalance.toFixed(2)}
+              </h3>
+              <p className="text-[10px] text-slate-500 mt-2 uppercase font-mono tracking-widest">Patrimônio Acumulado</p>
+            </div>
+            <div className="p-3 bg-cyan-950/30 border border-cyan-500/20 rounded-lg text-cyan-400 group-hover:shadow-[0_0_10px_rgba(6,182,212,0.3)] transition-all">
+              <DollarSign size={24} />
+            </div>
+          </div>
+        </div>
 
 
         <div className="glass-panel p-6 rounded-xl hover:border-warning/30 transition-all group">
