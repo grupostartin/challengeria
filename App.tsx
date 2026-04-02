@@ -92,193 +92,129 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const App: React.FC = () => {
   return (
     <Router>
-      <Routes>
-        {/* PUBLIC ROUTE - Must come FIRST and be EXACT */}
+      <AuthProvider>
+        <AppProvider>
+          <Routes>
+            {/* PUBLIC ROUTES */}
+            <Route path="/portal/:token" element={<ClientPortal />} />
+            <Route path="/bio/:username" element={<PublicBio />} />
+            <Route path="/lp" element={<LandingPage />} />
+            
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/plan-expired" element={<PlanExpired />} />
 
-        <Route path="/portal/:token" element={<ClientPortal />} />
-        <Route path="/bio/:username" element={<PublicBio />} />
-        <Route path="/lp" element={<LandingPage />} />
-
-
-        {/* AUTH-REQUIRED ROUTES */}
-        <Route path="/login" element={
-          <AuthProvider>
-            <Login />
-          </AuthProvider>
-        } />
-
-        <Route path="/plan-expired" element={
-          <AuthProvider>
-            <PlanExpired />
-          </AuthProvider>
-        } />
-
-        <Route path="/signup" element={
-          <AuthProvider>
-            <Signup />
-          </AuthProvider>
-        } />
-
-        <Route path="/" element={
-          <AuthProvider>
-            <AppProvider>
+            {/* PROTECTED ROUTES */}
+            <Route path="/" element={
               <ProtectedRoute>
                 <Layout>
                   <Dashboard />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
 
-
-        <Route path="/tarefas" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/tarefas" element={
               <ProtectedRoute>
                 <Layout>
                   <Kanban />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/financeiro" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/financeiro" element={
               <ProtectedRoute>
                 <Layout>
                   <Finance />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/clientes" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/clientes" element={
               <ProtectedRoute>
                 <Layout>
                   <Customers />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/contratos" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/contratos" element={
               <ProtectedRoute>
                 <Layout>
                   <Contracts />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/estoque" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/estoque" element={
               <ProtectedRoute>
                 <Layout>
                   <Inventory />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/vendas" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/vendas" element={
               <ProtectedRoute>
                 <Layout>
                   <Sales />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/agenda" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/agenda" element={
               <ProtectedRoute>
                 <Layout>
                   <Agenda />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/config-bio" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/config-bio" element={
               <ProtectedRoute>
                 <Layout>
                   <BioSettings />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/assinatura" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/assinatura" element={
               <ProtectedRoute>
                 <Layout>
                   <Subscription />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/anexo-rapido" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/anexo-rapido" element={
               <ProtectedRoute>
                 <Layout>
                   <QuickAttachment />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/anotacoes" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/anotacoes" element={
               <ProtectedRoute>
                 <Layout>
                   <Notes />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="/ajuda" element={
-          <AuthProvider>
-            <AppProvider>
+            <Route path="/ajuda" element={
               <ProtectedRoute>
                 <Layout>
                   <Help />
                 </Layout>
               </ProtectedRoute>
-            </AppProvider>
-          </AuthProvider>
-        } />
+            } />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AppProvider>
+      </AuthProvider>
     </Router>
   );
 };
