@@ -52,6 +52,7 @@ const Finance: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setBy] = useState<'date_desc' | 'date_asc' | 'value_desc' | 'value_asc'>('date_desc');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [currentPeriod, setCurrentPeriod] = useState(new Date());
   const [isUploading, setIsUploading] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -102,8 +103,13 @@ const Finance: React.FC = () => {
       const matchesSearch = tDesc.includes(search) || tCat.includes(search);
 
       let matchesDate = true;
-      if (dateRange.start) matchesDate = matchesDate && t.data >= dateRange.start;
-      if (dateRange.end) matchesDate = matchesDate && t.data <= dateRange.end;
+      if (dateRange.start || dateRange.end) {
+        if (dateRange.start) matchesDate = matchesDate && t.data >= dateRange.start;
+        if (dateRange.end) matchesDate = matchesDate && t.data <= dateRange.end;
+      } else {
+        const [y, m] = t.data.split('-').map(Number);
+        matchesDate = y === currentPeriod.getFullYear() && (m - 1) === currentPeriod.getMonth();
+      }
 
       return matchesType && matchesStatus && matchesSearch && matchesDate;
     })
@@ -121,9 +127,37 @@ const Finance: React.FC = () => {
       }
     });
 
+  const periodIncome = filteredTransactions
+    .filter(t => t.tipo === 'receita')
+    .reduce((acc, curr) => acc + (curr.statusPagamento === 'parcial' ? (curr.valor_pago || 0) : curr.valor), 0);
+
+  const periodExpense = filteredTransactions
+    .filter(t => t.tipo === 'despesa')
+    .reduce((acc, curr) => acc + (curr.statusPagamento === 'parcial' ? (curr.valor_pago || 0) : curr.valor), 0);
+
+  const periodBalance = periodIncome - periodExpense;
+
+  const handlePrevMonth = () => {
+    setCurrentPeriod(prev => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() - 1);
+      return d;
+    });
+  };
+
+  const handleNextMonth = () => {
+    setCurrentPeriod(prev => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() + 1);
+      return d;
+    });
+  };
+
+  const monthYearLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(currentPeriod);
+
   const paidRecurrenceIds = transactions
     .filter(t => {
-      if (!t.recurrence_id) return false;
+      if (!t.recurrence_id || !t.data) return false;
       const tDate = new Date(t.data);
       return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
     })
@@ -416,6 +450,21 @@ const Finance: React.FC = () => {
         </button>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass-panel p-4 rounded-xl border border-emerald-500/20 bg-emerald-950/10">
+          <p className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest mb-1">Entradas no Período</p>
+          <h4 className="text-xl font-bold text-emerald-400 font-mono">R$ {periodIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h4>
+        </div>
+        <div className="glass-panel p-4 rounded-xl border border-rose-500/20 bg-rose-950/10">
+          <p className="text-[10px] font-mono text-rose-500 uppercase tracking-widest mb-1">Saídas no Período</p>
+          <h4 className="text-xl font-bold text-rose-400 font-mono">R$ {periodExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h4>
+        </div>
+        <div className="glass-panel p-4 rounded-xl border border-cyan-500/20 bg-cyan-950/10">
+          <p className="text-[10px] font-mono text-cyan-500 uppercase tracking-widest mb-1">Saldo do Período</p>
+          <h4 className={`text-xl font-bold font-mono ${periodBalance >= 0 ? 'text-cyan-400' : 'text-rose-400'}`}>R$ {periodBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h4>
+        </div>
+      </div>
+
       {view === 'transactions' ? (
         <div className="glass-panel rounded-xl overflow-hidden border border-slate-700">
           <div className="p-4 border-b border-slate-700 space-y-4 bg-slate-900/50">
@@ -497,9 +546,36 @@ const Finance: React.FC = () => {
             </div>
 
             {/* Date Filters */}
-            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-800/50">
-              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Período:</span>
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800/50">
+              <div className="flex items-center gap-4">
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Navegação:</span>
+                <div className="flex items-center gap-1 bg-slate-950 rounded-lg p-1 border border-slate-800">
+                  <button
+                    onClick={handlePrevMonth}
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-all"
+                  >
+                    <ArrowDownCircle size={14} className="rotate-90" />
+                  </button>
+                  <span className="px-3 text-xs font-bold text-slate-200 capitalize w-32 text-center">
+                    {monthYearLabel}
+                  </span>
+                  <button
+                    onClick={handleNextMonth}
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-all"
+                  >
+                    <ArrowUpCircle size={14} className="rotate-90" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentPeriod(new Date())}
+                    className="ml-1 p-1.5 text-[9px] font-bold text-cyan-500 hover:text-cyan-400 uppercase tracking-tighter"
+                  >
+                    Hoje
+                  </button>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Personalizado:</span>
                 <input
                   type="date"
                   value={dateRange.start}

@@ -27,11 +27,56 @@ import {
     ShieldCheck,
     BarChart3,
     Eye,
-    Lock
+    Lock,
+    Trash2
 } from 'lucide-react';
 
 const Help: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string>('geral');
+
+    const handleClearData = async () => {
+        if (!window.confirm('Isso irá limpar todo o cache e dados salvos no seu navegador para este site, deslogando você e recarregando a página. Deseja continuar?')) {
+            return;
+        }
+
+        try {
+            // Clear Storage
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Clear IndexedDB
+            if (window.indexedDB && window.indexedDB.databases) {
+                const databases = await window.indexedDB.databases();
+                databases.forEach(db => {
+                    if (db.name) {
+                        window.indexedDB.deleteDatabase(db.name);
+                    }
+                });
+            }
+
+            // Unregister Service Workers
+            if (navigator.serviceWorker) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+
+            // Clear Caches
+            if (window.caches) {
+                const cacheKeys = await caches.keys();
+                for (const key of cacheKeys) {
+                    await caches.delete(key);
+                }
+            }
+
+            // Final check and reload
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Error clearing site data:', error);
+            alert('Ocorreu um erro ao tentar limpar os dados automaticamente. Recomendamos que você limpe o cache manualmente nas configurações do seu navegador.');
+        }
+    };
 
     const sections = [
         { id: 'geral', label: 'Conceitos e PWA', icon: Info },
@@ -123,6 +168,25 @@ const Help: React.FC = () => {
                                     </div>
                                 </section>
                             </div>
+
+                            <section className="glass-panel p-8 rounded-3xl border border-rose-500/20 bg-rose-500/5 space-y-6">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                    <div className="space-y-2">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <Trash2 className="text-rose-400" /> Manutenção e Cache
+                                        </h3>
+                                        <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                                            Se o aplicativo estiver lento ou apresentando comportamentos inesperados, você pode limpar os dados locais e o cache do navegador. **Isso irá desconectar sua conta.**
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleClearData}
+                                        className="px-6 py-4 bg-rose-600/10 hover:bg-rose-600 border border-rose-500/30 text-rose-400 hover:text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95"
+                                    >
+                                        Limpar Cache e Dados do App
+                                    </button>
+                                </div>
+                            </section>
                         </div>
                     </div>
                 );

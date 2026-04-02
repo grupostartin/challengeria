@@ -12,6 +12,9 @@ import { FinancialOrganizer } from '../types';
 
 const Dashboard: React.FC = () => {
   const { tasks, transactions, inventory, appointments, appMode, financialOrganizers } = useApp();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
 
   React.useEffect(() => {
@@ -37,7 +40,11 @@ const Dashboard: React.FC = () => {
   const tasksDone = tasks.filter(t => t.coluna === 'done').length;
 
   const income = transactions
-    .filter(t => t.tipo === 'receita')
+    .filter(t => {
+      if (!t.data) return false;
+      const [y, m] = t.data.split('-').map(Number);
+      return t.tipo === 'receita' && y === currentYear && (m - 1) === currentMonth;
+    })
     .reduce((acc, curr) => {
       if (curr.statusPagamento === 'pago' || !curr.statusPagamento) return acc + curr.valor;
       if (curr.statusPagamento === 'parcial') return acc + (curr.valor_pago || 0);
@@ -45,7 +52,11 @@ const Dashboard: React.FC = () => {
     }, 0);
 
   const pendingIncome = transactions
-    .filter(t => t.tipo === 'receita')
+    .filter(t => {
+      if (!t.data) return false;
+      const [y, m] = t.data.split('-').map(Number);
+      return t.tipo === 'receita' && y === currentYear && (m - 1) === currentMonth;
+    })
     .reduce((acc, curr) => {
       if (curr.statusPagamento === 'pendente' || curr.statusPagamento === 'atrasado') return acc + curr.valor;
       if (curr.statusPagamento === 'parcial') return acc + (curr.valor - (curr.valor_pago || 0));
@@ -57,7 +68,11 @@ const Dashboard: React.FC = () => {
     .filter(t => t.tipo === 'receita' && (t.statusPagamento === 'pendente' || t.statusPagamento === 'atrasado' || t.statusPagamento === 'parcial'));
 
   const expense = transactions
-    .filter(t => t.tipo === 'despesa')
+    .filter(t => {
+      if (!t.data) return false;
+      const [y, m] = t.data.split('-').map(Number);
+      return t.tipo === 'despesa' && y === currentYear && (m - 1) === currentMonth;
+    })
     .reduce((acc, curr) => {
       if (curr.statusPagamento === 'pago' || !curr.statusPagamento) return acc + curr.valor;
       if (curr.statusPagamento === 'parcial') return acc + (curr.valor_pago || 0);
@@ -65,7 +80,11 @@ const Dashboard: React.FC = () => {
     }, 0);
 
   const pendingExpense = transactions
-    .filter(t => t.tipo === 'despesa')
+    .filter(t => {
+      if (!t.data) return false;
+      const [y, m] = t.data.split('-').map(Number);
+      return t.tipo === 'despesa' && y === currentYear && (m - 1) === currentMonth;
+    })
     .reduce((acc, curr) => {
       if (curr.statusPagamento === 'pendente' || curr.statusPagamento === 'atrasado') return acc + curr.valor;
       if (curr.statusPagamento === 'parcial') return acc + (curr.valor - (curr.valor_pago || 0));
@@ -77,9 +96,6 @@ const Dashboard: React.FC = () => {
   // Organizer Calculations
   const currentDay = getDayOfMonth();
   const currentMonthName = getCurrentMonthName();
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
 
   // Get days in current month to handle wraparound
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -436,7 +452,7 @@ const Dashboard: React.FC = () => {
         <div className="glass-panel p-6 rounded-xl hover:border-emerald-500/30 transition-all group">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400 mb-1">Saldo Real (Pago)</p>
+              <p className="text-sm font-medium text-slate-400 mb-1">Saldo do Mês (Pago)</p>
               <h3 className={`text-2xl font-bold ${balance >= 0 ? 'text-white' : 'text-rose-500'}`}>
                 R$ {balance.toFixed(2)}
               </h3>
@@ -453,7 +469,7 @@ const Dashboard: React.FC = () => {
         <div className="glass-panel p-6 rounded-xl hover:border-purple-500/30 transition-all group">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400 mb-1">Receita Real</p>
+              <p className="text-sm font-medium text-slate-400 mb-1">Receita do Mês</p>
               <h3 className="text-2xl font-bold text-emerald-400">R$ {income.toFixed(2)}</h3>
               <span className="text-[10px] uppercase font-mono mt-2 inline-block text-amber-500 bg-amber-950/20 border border-amber-900 px-2 py-1 rounded">
                 A Receber: R$ {pendingIncome.toFixed(2)}

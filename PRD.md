@@ -20,75 +20,123 @@ O **UPStartin** é uma plataforma SaaS (Software as a Service) desenvolvida para
 
 ---
 
-## 4. Requisitos Funcionais (Módulos)
+## 4. Mapa Completo de Funcionalidades (Páginas e Módulos)
 
-### 4.1. Dashboard (Visão do Negócio)
+### 4.1. Dashboard (Visão do Negócio) `Dashboard.tsx`
 - Resumo mensal de receitas vs. despesas.
 - Próximos compromissos da agenda.
 - Tarefas urgentes (prazos curtos) no Kanban.
 - Alertas de faturas atrasadas ou vencendo hoje.
+- Atalhos rápidos para as principais funções.
 
-### 4.2. Gestão de Projetos (Kanban)
-- Colunas dinâmicas: `Ideia`, `Roteiro`, `Gravação`, `Edição`, `Postado`.
-- Atribuição de tarefas a clientes específicos.
-- Definição de prazos e tags personalizadas.
+### 4.2. Gestão de Projetos (Kanban) `Kanban.tsx`
+- Colunas dinâmicas: `Fazer`, `Em Progresso`, `Concluído`.
+- Atribuição de tarefas a clientes específicos (`customer_id`).
+- Definição de prazos, tags personalizadas e prioridade.
+- Feedback visual de status e progresso.
 
-### 4.3. CRM & Relacionamento
-- Cadastro completo de clientes (Nome, Email, Telefone).
-- Geração de tokens de acesso único para o **Portal do Cliente**.
+### 4.3. CRM & Relacionamento `Customers.tsx`
+- Cadastro completo de clientes (Nome, Email, Telefone, Status).
+- **Portal do Cliente**: Geração de tokens de acesso único (`ClientPortal.tsx`).
 - Histórico de interações e transações por cliente.
+- Filtro por status (Ativo, Inativo, Atraso).
 
-### 4.4. Centro Financeiro
-- Categorização de lançamentos (Receita/Despesa).
-- **Organizadores Financeiros**: Gestão de custos fixos (Contas de Luz, Internet) e variáveis.
-- Suporte a anexos (PDF/Imagens) para cada transação.
-- Filtros por período, cliente e categoria.
+### 4.4. Centro Financeiro `Finance.tsx`
+- **Lançamentos**: Registro de Receitas e Despesas com categorias.
+- **Organizadores Financeiros**: Gestão de pagamentos recorrentes (Contas fixas/variáveis).
+- **Anexos**: Suporte a comprovantes (PDF/Imagens).
+- **Filtros e Relatórios**: Visualização por período, categoria e cliente.
+- **Vencimentos**: Gestão de datas de vencimento e status de pagamento (Pendente, Pago, Atrasado).
 
-### 4.5. Gestão de Contratos
-- Upload e visualização de contratos em PDF.
-- Rastreamento de status de assinatura e vinculação a pagamentos.
+### 4.5. Gestão de Contratos `Contracts.tsx`
+- Upload de contratos em PDF vinculados a clientes.
+- Visualização rápida e rastreamento de status.
+- Integração com o fluxo financeiro para comprovação de serviços.
 
-### 4.6. Vendas & Estoque
-- Registro de vendas simples ou com múltiplos itens.
-- Controle de quantidade em estoque com baixa automática após venda.
-- Relatório de produtos mais vendidos.
+### 4.6. Vendas & Estoque `Inventory.tsx` & `Sales.tsx`
+- **Estoque**: Cadastro de produtos/serviços com controle de quantidade.
+- **Vendas**: Registro de transações com múltiplos itens, métodos de pagamento (Pix, Cartão, Dinheiro) e baixa automática de estoque.
+- **Relatórios**: Histórico detalhado de vendas e status.
 
-### 4.7. UPStartin Bio (Marketing)
-- Editor Visual: Troca de avatar, cores de fundo e estilos de botões.
-- Gerenciamento de links com ícones personalizáveis.
-- **Lead Capture**: Formulário público que cria automaticamente um cliente prospecto no CRM.
+### 4.7. Agenda e Compromissos `Agenda.tsx`
+- Calendário interativo para agendamentos de serviços e reuniões.
+- Sincronização com clientes do CRM.
+- Status de compromissos (Pendente, Concluído, Cancelado).
 
----
+### 4.8. UPStartin Bio (Canto de Marketing) `PublicBio.tsx` & `BioSettings.tsx`
+- **Página de Links**: Estilo "Linktree" personalizável (avatar, cores, links, imagens).
+- **Lead Capture**: Formulário público que cria automaticamente um prospecto no CRM.
+- **Gestão Visual**: Editor em tempo real para cores de fundo, botões e tipografia.
 
-## 5. Requisitos Não Funcionais
-- **Segurança**: Autenticação via Supabase Auth (GoTrue).
-- **Responsividade**: Interface adaptável para Mobile, Tablet e Desktop.
-- **Performance**: Tempo de carregamento inferior a 2 segundos para o Dashboard.
-- **Disponibilidade**: Arquitetura baseada em cloud (Vercel + Supabase) para 99.9% uptime.
-
----
-
-## 6. Arquitetura Técnica
-- **Framework**: React 19 com Vite.
-- **Linguagem**: TypeScript (Strict Mode).
-- **Banco de Dados**: PostgreSQL (Gerenciado por Supabase).
-- **Storage**: Supabase Storage para contratos, anexos e fotos de perfil.
-- **Injeção de Estado**: Context API para estados globais (Auth e AppData).
-- **Animações**: Framer Motion para feedback visual e transições de página.
+### 4.9. Ferramentas de Produtividade
+- **Notas (`Notes.tsx`)**: Sistema de anotações rápidas para o usuário (privado).
+- **Anexo Rápido (`QuickAttachment.tsx`)**: Fluxo otimizado para upload de arquivos em lote.
+- **Ajuda (`Help.tsx`)**: Documentação, tutoriais e botão "Limpar Cache/Dados".
 
 ---
 
-## 7. Fluxos de Usuário (User Flows)
-1. **Onboarding**: Usuário se cadastra -> Landing Page explicativa -> Configura seu perfil de Bio -> Começa a cadastrar clientes.
-2. **Ciclo de Venda**: Lead chega via Link-in-Bio -> Convertido em Cliente no CRM -> Projeto criado no Kanban -> Contrato enviado -> Pagamento registrado no Financeiro.
-3. **Pós-Venda**: Cliente recebe link do Portal -> Acompanha as etapas no Kanban -> Verifica históricos e notas fiscais anexadas.
+## 5. UI/UX & Componentes (Design System)
+
+### 5.1. Layout e Navegação `Layout.tsx`
+- Barra lateral (Desktop) e Menus Flutuantes/Inferiores (Mobile).
+- **Bottom Menu / Floating Menu**: Otimizado para uso com uma mão em dispositivos móveis.
+- Barra de estado superior com nome do app e modo de visualização.
+
+### 5.2. Componentes UI Reutilizáveis `components/ui/`
+- **Modais (`Modal.tsx`)**: Diálogos consistentes para criações e edições.
+- **Tabelas e Cards**: Otimizados para legibilidade.
+- **Framer Motion**: Animações de entrada e transições de página para sensação premium.
+- **Design Token**: Paleta de cores escura (Slate/Zinc) com destaques em azul/violeta.
 
 ---
 
-## 8. Roadmap e Futuro
-- **Integração de APIs**: Conexão com Instagram API para buscar métricas automáticas.
-- **Automação**: Envio de lembretes de pagamento via WhatsApp WebHook.
-- **IA**: Assistente para gerar roteiros de conteúdo baseados no nicho do usuário.
+## 6. Arquitetura Técnica e Modelo de Dados
+
+### 6.1. Stack Tecnológica
+- **Framework**: React 19 com Vite (HMR ultra-rápido).
+- **Linguagem**: TypeScript para segurança de tipos.
+- **Estilização**: Tailwind CSS (via `index.css`).
+- **Estado Global**: React Context API (`AuthContext`, `AppDataContext`).
+- **Roteamento**: React Router v6.
+
+### 6.2. Modelo de Dados `types.ts`
+- **Perfil (`UserProfile`)**: Gestão de planos e status de assinatura.
+- **Entidades**: `Task`, `Transaction`, `Customer`, `Contract`, `InventoryItem`, `Sale`, `Appointment`, `BioConfig`, `UserNote`.
+- **Enums**: Prioridades, Status de Tarefas, Tipos de Transação e Modos de App.
+
+### 6.3. Backend & Integração
+- **Supabase**:
+    - **Auth**: Gestão de usuários e sessões.
+    - **PostgreSQL**: Banco de dados relacional.
+    - **Storage**: Armazenamento de PDFs, comprovantes e fotos de perfil.
+    - **Edge Functions**: Lógica de checkout (`checkout`) e processamento de webhooks (`webhook`).
 
 ---
-**Status atual do PRD: v1.0 (Lançamento Core)**
+
+## 7. Infraestrutura e DevOps
+
+- **Hospedagem**: Vercel (Front-end e API Proxy).
+- **PWA (Progressive Web App)**:
+    - `manifest.json` e `sw.js` para instalação no celular e funcionamento offline básico.
+    - Ícones adaptáveis (512px).
+- **Pagamentos**: Integração com Stripe via Supabase Edge Functions para gestão de planos (Trial vs Premium).
+- **Segurança**: Políticas de RLS (Row Level Security) no Supabase para garantir que usuários vejam apenas seus próprios dados.
+
+---
+
+## 8. Fluxos de Usuário (User Flows)
+
+1. **Onboarding**: Cadastro -> Login -> Teste Gratuito (Trial) de 7 dias -> Configuração da Bio.
+2. **Ciclo de Venda**: Lead chega via Link-in-Bio -> CRM -> Projeto Kanban -> Contrato/Anexo -> Pagamento no Financeiro.
+3. **Gestão de Assinatura**: Verificação de status de plano -> Link para Stripe Portal -> Atualização automática via Webhook.
+
+---
+
+## 9. Roadmap e Futuro (Próximos Passos)
+- **Dashboard Avançado**: Gráficos de barra e linha para tendências financeiras.
+- **Integração de APIs**: Conexão com Google Calendar e Instagram Insights.
+- **Automação**: Disparo de mensagens WhatsApp no vencimento de faturas.
+- **IA Generativa**: Criador de roteiros integrado ao Kanban.
+
+---
+**Status atual do PRD: v1.1 (Mapeamento Completo de Ecossistema)**
