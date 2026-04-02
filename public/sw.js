@@ -1,13 +1,13 @@
-const CACHE_NAME = 'upstartin-v2';
+const CACHE_NAME = 'upstartin-v3';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
-    '/index.css',
     '/manifest.json',
     '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => cache.addAll(ASSETS_TO_CACHE))
@@ -16,29 +16,44 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
+        Promise.all([
+            self.clients.claim(),
+            caches.keys().then((cacheNames) => {
+                return Promise.all(
+                    cacheNames.map((cacheName) => {
+                        if (cacheName !== CACHE_NAME) {
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            })
+        ])
     );
 });
 
 self.addEventListener('fetch', (event) => {
-    // Only intercept GET requests
     if (event.request.method !== 'GET') return;
 
-    // Avoid intercepting Supabase / External API calls
     const url = new URL(event.request.url);
     if (url.origin.includes('supabase.co')) return;
 
+    // Use Network First strategy for all requests to ensure updates
     event.respondWith(
-        caches.match(event.request)
-            .then((response) => response || fetch(event.request))
+        fetch(event.request)
+            .then((response) => {
+                // Cache a copy of valid responses
+                if (response && response.status === 200 && response.type === 'basic') {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
+                return response;
+            })
+            .catch(() => {
+                // If network fails, try cache
+                return caches.match(event.request);
+            })
     );
 });
 self.addEventListener('message', (event) => {
